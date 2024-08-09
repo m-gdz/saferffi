@@ -1,0 +1,70 @@
+start[Crate] =  Crate top  
+ └─ Crate = crate: 
+    ├─ Shebang_line*
+    └─ Mod_item*
+       └─ Mod_item = item: 
+          ├─ Attributes_and_vis = AttrsAndVis: 
+          │  ├─ Outer_attribute*
+          │  └─ "pub"?
+          └─ Item = Statement_item statement_item 
+             └─ Statement_item = Block_item block_item 
+                └─ Block_item = Item_fn 
+                   └─ Item_fn = item_fn: 
+                      ├─ Identifier = ([0-9A-Z_a-z\u0080-ÿ] !<< [A-Z_a-z\u0080-ÿ] [0-9A-Z_a-z\u0080-ÿ]* !>> [0-9A-Z_a-z\u0080-ÿ]) \ Rust_keywords 
+                      │  └─ ([0-9A-Z_a-z\u0080-ÿ] !<< [A-Z_a-z\u0080-ÿ] [0-9A-Z_a-z\u0080-ÿ]* !>> [0-9A-Z_a-z\u0080-ÿ])
+                      │     ├─ m
+                      │     └─ [0-9A-Z_a-z\u0080-ÿ]*
+                      │        ├─ a
+                      │        ├─ i
+                      │        └─ n
+                      ├─ Generic_params?
+                      ├─ Fn_decl = fn_decl: 
+                      │  ├─ Fn_params = "("  Params?  ")" 
+                      │  │  └─ Params?
+                      │  └─ Ret_type?
+                      ├─ Where_clause?
+                      └─ Inner_attributes_and_block = "{"  Inner_attribute* ia  Statements stmts  "}" 
+                         ├─ Inner_attribute*
+                         └─ Statements = Statement* stmts  Expression!blockStmt $!blockExpr $? expr 
+                            ├─ Statement*
+                            │  └─ Statement = Expression!blockStmt $!blockExpr $?  ";" 
+                            │     └─ Expression!blockStmt $!blockExpr $?
+                            │        └─ Expression = macroExpr: 
+                            │           └─ Macro_expression = Path_expression  "!"  Identifier?  Macro_parens 
+                            │              ├─ Path_expression = "::"?  Path_generic_args_with_colons 
+                            │              │  ├─ "::"?
+                            │              │  └─ Path_generic_args_with_colons = components: 
+                            │              │     └─ Identifier = ([0-9A-Z_a-z\u0080-ÿ] !<< [A-Z_a-z\u0080-ÿ] [0-9A-Z_a-z\u0080-ÿ]* !>> [0-9A-Z_a-z\u0080-ÿ]) \ Rust_keywords 
+                            │              │        └─ ([0-9A-Z_a-z\u0080-ÿ] !<< [A-Z_a-z\u0080-ÿ] [0-9A-Z_a-z\u0080-ÿ]* !>> [0-9A-Z_a-z\u0080-ÿ])
+                            │              │           ├─ p
+                            │              │           └─ [0-9A-Z_a-z\u0080-ÿ]*
+                            │              │              ├─ r
+                            │              │              ├─ i
+                            │              │              ├─ n
+                            │              │              ├─ t
+                            │              │              ├─ l
+                            │              │              └─ n
+                            │              ├─ Identifier?
+                            │              └─ Macro_parens = "("  Macro_tokens*  ")" 
+                            │                 └─ Macro_tokens*
+                            │                    └─ Macro_tokens = String 
+                            │                       └─ String = lit_str: 
+                            │                          └─ Literal_string = """ StringChar* "\"? """ 
+                            │                             ├─ StringChar*
+                            │                             │  └─ StringChar = ![\"\\]+ !>> ![\"\\] 
+                            │                             │     └─ ![\"\\]+
+                            │                             │        ├─ H
+                            │                             │        ├─ e
+                            │                             │        ├─ l
+                            │                             │        ├─ l
+                            │                             │        ├─ o
+                            │                             │        ├─ ,
+                            │                             │        ├─ ⎵
+                            │                             │        ├─ w
+                            │                             │        ├─ o
+                            │                             │        ├─ r
+                            │                             │        ├─ l
+                            │                             │        ├─ d
+                            │                             │        └─ .
+                            │                             └─ "\"?
+                            └─ Expression!blockStmt $!blockExpr $?
