@@ -1093,12 +1093,12 @@ syntax RightOperand
     = Operand
     ;
 
-// WRONG
+// WRONG A SubjectExpression is any expression in category Expression, except StructExpression.
 syntax SubjectExpression
     = Expression
     ;
 
-// WRONG
+// WRONG A SubjectLetExpression is any expression in category SubjectExpression, except LazyBooleanExpression.
 syntax SubjectLetExpression
     = SubjectExpression
     ;
