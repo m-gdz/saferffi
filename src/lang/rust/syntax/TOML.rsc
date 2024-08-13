@@ -3,20 +3,13 @@ module lang::rust::\syntax::TOML
 // Overall Structure
 start syntax TOML = {Expression NewLine}+ ;
 
-layout WS 
-	= WSOrComment* !>> [\ \t\r\n] !>> "#" 
-	;
-
-lexical WSOrComment
-	= [\ \t \r \n]
-	| Comment
-	;
-
+lexical WS = WSChar*;
+lexical WSChar = [\u0020\u0009];
 
 syntax Expression
-    = Comment?
-    | Keyval Comment?
-    | Table Comment?
+    = WS Comment?
+    | WS Keyval WS Comment?
+    | WS Table WS Comment?
     ;
 
 
@@ -35,8 +28,8 @@ syntax SimpleKey = QuotedKey | UnquotedKey;
 syntax UnquotedKey = [A-Za-z0-9_\-]+;
 syntax QuotedKey = BasicString | LiteralString;
 syntax DottedKey = SimpleKey (DotSep SimpleKey)+;
-lexical DotSep =  "." ;
-lexical KeyvalSep =  "=" ;
+lexical DotSep =  WS "." WS ;
+lexical KeyvalSep =  WS "=" WS ;
 syntax Val = String | Boolean | Array | InlineTable | DateTime | Float | Integer ;
 
 // String
@@ -45,7 +38,7 @@ syntax String = MLBasicString | BasicString | MLLiteralString | LiteralString ;
 // Basic String
 syntax BasicString = "\"" BasicChar* "\"" ;
 lexical BasicChar = BasicUnescaped | Escaped;
-lexical BasicUnescaped = [\u0021] | [\u0023-\u005B] | [\u005D-\u007E] | NonAscii;
+lexical BasicUnescaped = WSChar | [\u0021] | [\u0023-\u005B] | [\u005D-\u007E] | NonAscii;
 lexical Escaped = Escape EscapeSeqChar;
 lexical Escape = "\\" ;
 lexical EscapeSeqChar = "\"" | "\\" | "b" | "f" | "n" | "r" | "t" 
@@ -62,8 +55,8 @@ syntax MLBasicBody = MLBContent* (MLBQuotes MLBContent+) MLBQuotes? ;
 syntax MLBContent = MLBChar | NewLine | MLBEscapedNL;
 lexical MLBChar = MLBUnescaped | Escaped;
 lexical MLBQuotes =  "\"" | ("\"" "\"");
-lexical MLBUnescaped =  [\u0021\u0023-\u005B\u005D-\u007E] | NonAscii;
-lexical MLBEscapedNL = Escape NewLine+ ;
+lexical MLBUnescaped =  WSChar | [\u0021\u0023-\u005B\u005D-\u007E] | NonAscii;
+lexical MLBEscapedNL = Escape WS NewLine+ (WSChar | NewLine)* ;
 
 // Literal String
 lexical LiteralString = "\'" ([\u0009\u0020-\u0026\u0028-\u007E] | NonAscii)* "\'" ;
@@ -119,26 +112,30 @@ syntax LocalDate = FullDate;
 syntax LocalTime = PartialTime;
 
 // Array
-syntax Array = "[" ArrayValues? "]";
+syntax Array = "[" ArrayValues? WSCommentNewLine "]";
 
 syntax ArrayValues
     = {ArrayBody ","}+ ","?
     ;
 
-lexical ArrayBody =  Val ;
+syntax ArrayBody = 
+        WSCommentNewLine Val WSCommentNewLine
+    ;
+
+lexical WSCommentNewLine = (WSChar | (Comment? NewLine))*;
 
 
 
 // Table
 syntax Table = StdTable | ArrayTable ;
 
-syntax StdTable = "["  Key  "]" ;
+syntax StdTable = "[" WS Key WS "]" ;
 
 // Inline Table
 
 syntax InlineTable = "{"  InlineTableKeyVals?  "}" ;
 
-syntax InlineTableKeyVals = Keyval ( ","  InlineTableKeyVals)?;
+syntax InlineTableKeyVals = Keyval ( WS "," WS InlineTableKeyVals)?;
 
 // Array Table
-syntax ArrayTable = "[["  Key  "]]";
+syntax ArrayTable = "[[" WS Key WS "]]";
