@@ -6,7 +6,7 @@ import IO;
 import ParseTree;
 import Exception;
 
-import lang::rust::\syntax::Rust;
+import lang::rust::\syntax::Ferrocene;
 
 @doc{
 .Synopsis
@@ -28,7 +28,7 @@ public list[Tree] Parse(list[loc] source_locs, bool verbose=false){
 	
 	for(source_loc <- source_locs){
 		try{
-			Tree source_tree = parse(#start[Crate], source_loc, allowAmbiguity=true);
+			Tree source_tree = parse(#start[SourceFile], source_loc, allowAmbiguity=true);
 			
 			parsed += source_loc;
 			if(/t:amb(_) := source_tree){
@@ -40,6 +40,7 @@ public list[Tree] Parse(list[loc] source_locs, bool verbose=false){
 			source_trees += source_tree;
 		}catch ParseError(_):{
 			failed += source_loc;
+			println("Failed: <source_loc>");
 		}
 	}
 	

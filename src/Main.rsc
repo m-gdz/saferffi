@@ -30,10 +30,11 @@ public void SaferFFI(loc project_loc, str extension=".rs", bool verbose=false){
 	
 	list[Tree] source_trees = Parse(source_locs, verbose=verbose);
 
-	for(st <- source_trees){
-		println(prettyTree(st));
-		//saveParseTreeRender(st);
-	}
+
+	// for(st <- source_trees){
+	// 	a = prettyTree(st);
+	// 	//saveParseTreeRender(st);
+	// }
 
     Duration timer_duration = createDuration(timer_start, now());
 	println(Timer(timer_duration));

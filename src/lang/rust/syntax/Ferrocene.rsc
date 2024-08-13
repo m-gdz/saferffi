@@ -42,18 +42,17 @@ lexical Delimiter
 
 // 2.3 Identifiers
 
-lexical Identifier
+syntax Identifier
     = NonKeywordIdentifier
     | RawIdentifier
     ;
 
 lexical IdentifierList
-    = Identifier ("," Identifier)* ","?
+    = {Identifier ","}+ ","?
     ;
 
-lexical NonKeywordIdentifier
-    = PureIdentifier
-    | WeakKeyword
+lexical NonKeywordIdentifier 
+    = PureIdentifier \ Keyword
     ;
 
 lexical RawIdentifier
@@ -70,7 +69,7 @@ lexical IdentifierOrUnderscore
     | "_"
     ;
 
-lexical Renaming
+syntax Renaming
     = "as" IdentifierOrUnderscore
     ;
 
@@ -79,19 +78,19 @@ lexical XID_Start
     = [a-z]  // Lowercase letters
     | [A-Z]  // Uppercase letters
     | "_"    // Underscore
-    | [\u00C0-\u00D6]  // À-Ö (Latin-1 Supplement)
-    | [\u00D8-\u00F6]  // Ø-ö (Latin-1 Supplement)
-    | [\u00F8-\u00FF]  // ø-ÿ (Latin-1 Supplement)
-    | [\u0100-\u017F]  // Extended Latin-1
-    | [\u0400-\u04FF]  // Cyrillic
-    | [\u0530-\u058F]  // Armenian
-    | [\u0600-\u06FF]  // Arabic
-    | [\u0900-\u097F]  // Devanagari
-    | [\u3040-\u309F]  // Hiragana
-    | [\u30A0-\u30FF]  // Katakana
-    | [\u4E00-\u9FFF]  // CJK Unified Ideographs
-    | [\uF900-\uFAFF]  // CJK Compatibility Ideographs
-    | [\u1F600-\u1F64F] // Emoji (smileys)
+    // | [\u00C0-\u00D6]  // À-Ö (Latin-1 Supplement)
+    // | [\u00D8-\u00F6]  // Ø-ö (Latin-1 Supplement)
+    // | [\u00F8-\u00FF]  // ø-ÿ (Latin-1 Supplement)
+    // | [\u0100-\u017F]  // Extended Latin-1
+    // | [\u0400-\u04FF]  // Cyrillic
+    // | [\u0530-\u058F]  // Armenian
+    // | [\u0600-\u06FF]  // Arabic
+    // | [\u0900-\u097F]  // Devanagari
+    // | [\u3040-\u309F]  // Hiragana
+    // | [\u30A0-\u30FF]  // Katakana
+    // | [\u4E00-\u9FFF]  // CJK Unified Ideographs
+    // | [\uF900-\uFAFF]  // CJK Compatibility Ideographs
+    // | [\u1F600-\u1F64F] // Emoji (smileys)
     ; 
 
 lexical XID_Continue 
@@ -140,7 +139,7 @@ lexical ByteEscape
 
 // UNSURE A ByteCharacter is any character in category AsciiCharacter except characters 0x09 (horizontal tabulation), 0x0A (new line), 0x0D (carriage return), 0x27 (apostrophe), and 0x5C (reverse solidus).
 lexical ByteCharacter
-    = AsciiCharacter \ [\u000A \u000D \u0027 \u005C]
+    = AsciiCharacter \ ('\u0009' | '\u000A' | '\u000D' | '\u0027' | '\u005C')
     ;
 
 // 2.4.2 Byte String Literals
@@ -162,7 +161,7 @@ lexical SimpleByteStringContent
 
 // UNSURE A SimpleByteStringCharacter is any character in category AsciiCharacter except characters 0x0D (carriage return), 0x22 (quotation mark), and 0x5C (reverse solidus).
 lexical SimpleByteStringCharacter
-    = AsciiCharacter \ [\u000D \u0022 \u005C]
+    = AsciiCharacter \ ('\u000D' | '\u0022' | '\u005C')
     ;
 
 lexical RawByteStringLiteral
@@ -413,59 +412,60 @@ lexical BooleanLiteral
 
 // 2.5 Comments ## A revoir
 
-syntax Comment
+lexical Comment
     = BlockCommentOrDoc
     | LineCommentOrDoc
     ;
 
-syntax BlockCommentOrDoc
+lexical BlockCommentOrDoc
     = BlockComment
     | InnerBlockDoc
     | OuterBlockDoc
     ;
 
-syntax LineCommentOrDoc
+lexical LineCommentOrDoc
     = LineComment
     | InnerLineDoc
     | OuterLineDoc
     ;
 
-syntax LineComment
-    = "//"
-    | "//" (![!/] | "//") ![\n]*
+lexical LineComment
+    = "//" ![\n]* $
+    //| "//" (![!/] | "//") ![\n]*
     ;
 
-syntax BlockComment // UNSURE Probably wrong
-    = "/*" (![!*] | "**" | BlockCommentOrDoc) (BlockCommentOrDoc | "*/")* "*/"
+lexical BlockComment // UNSURE Probably wrong
+    = "/*" CommentStuff*  "*/"
     | "/**/"
     | "/***/"
     ;
 
-syntax InnerBlockDoc // UNSURE Probably wrong
+lexical CommentStuff
+  = BlockCommentOrDoc 
+  | ![*/]
+  | [*] !>> [/]
+  | [/] !<< [*] 
+  ;
+
+lexical InnerBlockDoc // UNSURE Probably wrong
     = "/*!" (BlockCommentOrDoc | "")* "*/"
     ;
 
-syntax InnerLineDoc
+lexical InnerLineDoc
     = "//!" ![\n \r]*
     ;
 
-syntax OuterBlockDoc // UNSURE Probably wrong, should be /** (~[*] | BlockCommentOrDoc) (BlockCommentOrDoc | ~[*/ \r])* */
+lexical OuterBlockDoc // UNSURE Probably wrong, should be /** (~[*] | BlockCommentOrDoc) (BlockCommentOrDoc | ~[*/ \r])* */
     = "/**" (![*] | BlockCommentOrDoc) (BlockCommentOrDoc | ![\u0000])* "*/"
     ;
 
-syntax OuterLineDoc
+lexical OuterLineDoc
     = "///" (![/]![\n\r]*)? //UNSURE
     ;
 
 // 2.6 Keywords
 
 keyword Keyword
-    = ReservedKeyword
-    | StrictKeyword
-    | WeakKeyword
-    ;
-
-keyword StrictKeyword
     = "as"
     | "async"
     | "await"
@@ -503,10 +503,7 @@ keyword StrictKeyword
     | "use"
     | "where"
     | "while"
-    ;
-
-keyword ReservedKeyword
-    = "abstract"
+    | "abstract"
     | "become"
     | "box"
     | "do"
@@ -519,10 +516,7 @@ keyword ReservedKeyword
     | "unsized"
     | "virtual"
     | "yield"
-    ;
-
-keyword WeakKeyword
-    = "macro_rules"
+    | "macro_rules"
     | "\'static"
     | "union"
     ;
@@ -567,7 +561,7 @@ syntax TypeSpecification
     ;
 
 syntax TypeSpecificationList
-    = TypeSpecification ("," TypeSpecification)* ","?
+    = {TypeSpecification ","}+ ","?
     ;
 
 syntax TypeSpecificationWithoutBounds
@@ -610,7 +604,7 @@ syntax TupleTypeSpecification
     ;
 
 syntax TupleFieldList
-    = TupleField ("," TupleField)* ","?
+    = {TupleField ","}+ ","?
     ;
 
 syntax TupleField
@@ -626,7 +620,7 @@ syntax EnumDeclaration
     ;
 
 syntax EnumVariantList
-    = EnumVariant ("," EnumVariant)* ","?
+    = {EnumVariant ","}+ ","?
     ;
 
 syntax EnumVariant
@@ -656,7 +650,7 @@ syntax RecordStructDeclaration
     ;
 
 syntax RecordStructFieldList
-    = "{" (RecordStructField ("," RecordStructField)* ","?)? "}"
+    = "{" ({RecordStructField ","}+ ","?)? "}"
     ;
 
 syntax RecordStructField
@@ -668,7 +662,7 @@ syntax TupleStructDeclaration
     ;
 
 syntax TupleStructFieldList
-    = "(" (TupleStructField ("," TupleStructField)* ","?)? ")"
+    = "(" ({TupleStructField ","}+ ","?)? ")"
     ;
 
 syntax TupleStructField
@@ -841,7 +835,7 @@ syntax AttributedLifetime
     ;
 
 syntax AttributedLifetimeList
-    = AttributedLifetime ("," AttributedLifetime)* ","?
+    = {AttributedLifetime ","}+ ","?
     ;
 
 
@@ -852,7 +846,7 @@ syntax Pattern
     ;
 
 syntax PatternList
-    = Pattern ("," Pattern)* ","?
+    = {Pattern ","}+ ","?
     ;
 
 syntax PatternWithoutAlternation
@@ -986,7 +980,7 @@ syntax RecordStructRestPattern
     ;
 
 syntax FieldDeconstructorList
-    = FieldDeconstructor ("," FieldDeconstructor)*
+    = {FieldDeconstructor ","}+
     ;
 
 syntax FieldDeconstructor
@@ -1078,7 +1072,7 @@ syntax ExpressionWithoutBlock
     ;
 
 syntax ExpressionList
-    = Expression ("," Expression)* ","?
+    = {Expression ","}+ ","?
     ;
 
 syntax Operand
@@ -1464,7 +1458,7 @@ syntax BaseInitializer
     ;
 
 syntax FieldInitializerList
-    = FieldInitializer ("," FieldInitializer)*
+    = {FieldInitializer ","}+
     ;
 
 syntax FieldInitializer
@@ -1553,7 +1547,7 @@ syntax ReturnTypeWithoutBounds
     ;
 
 syntax ClosureParameterList
-    = ClosureParameter ("," ClosureParameter)* ","?
+    = {ClosureParameter ","}+ ","?
     ;
 
 syntax ClosureParameter
@@ -1773,7 +1767,7 @@ syntax FunctionQualifierList
     ;
 
 syntax FunctionParameterList
-    = (FunctionParameter ("," FunctionParameter)* ","?)
+    = {FunctionParameter ","}+ ","?
     | (SelfParameter ("," FunctionParameter)* ","?)
     ;
 
@@ -1855,7 +1849,8 @@ syntax ImplementationBody
 
 // 12.1 Generic Parameters
 syntax GenericParameterList
-    = "\<" (GenericParameter ("," GenericParameter)* ","?)? "\>"
+    = "\<" "\>"
+    |  "\<" {GenericParameter ","}+ ","? "\>" 
     ;
 
 syntax GenericParameter
@@ -1894,7 +1889,7 @@ syntax WhereClause
     ;
 
 syntax WhereClausePredicateList
-    = WhereClausePredicate ("," WhereClausePredicate)* ","?
+    = {WhereClausePredicate ","}+ ","?
     ;
 
 syntax WhereClausePredicate
@@ -1912,7 +1907,7 @@ syntax TypeBoundPredicate
 
 // 12.3 Generic Arguments
 syntax GenericArgumentList
-    = "\<" (GenericArgument ("," GenericArgument)* ","?)? "\>"
+    = "\<" {GenericArgument ","}* "\>"
     ;
 
 syntax GenericArgument
@@ -1981,7 +1976,7 @@ syntax AttributeInput
     ;
 
 syntax AttributeContentList
-    = AttributeContent ("," AttributeContent)* ","?
+    = {AttributeContent ","}+ ","?
     ;
 
 // 13.2 Build-in Attributes
@@ -2059,7 +2054,7 @@ syntax TargetFeatureContent
     ;
 
 syntax FeatureList
-    = Feature ("," Feature)* 
+    = {Feature ","}+
     ;
 
 syntax Feature
@@ -2130,7 +2125,7 @@ syntax ConfigurationPredicateNot
     ;
 
 syntax ConfigurationPredicateList
-    = ConfigurationPredicate ("," ConfigurationPredicate)* ","?
+    =  {ConfigurationPredicate ","}+ ","?
     ;
 
 syntax CfgAttrContent
@@ -2450,7 +2445,7 @@ syntax SimplePathSegment
     ;
 
 syntax SimplePathList
-    = SimplePath ("," SimplePath)* ","?
+    = {SimplePath ","}+ ","?
     ;
 
 syntax QualifiedType
@@ -2522,7 +2517,7 @@ syntax SimplePathPrefix
     ;
 
 syntax UseImportContentList
-    = UseImportContent ("," UseImportContent)* ","?
+    = {UseImportContent ","}+ ","?
     ;
 
 
@@ -2539,9 +2534,9 @@ syntax UseImportContentList
 
 start syntax SourceFile
     = ZeroWidthNoBreakSpace?
-    | Shebang?
-    | InnerAttributeOrDoc*
-    | Item*
+    Shebang?
+    InnerAttributeOrDoc*
+    Item*
     ;
 
 syntax ZeroWidthNoBreakSpace
@@ -2606,7 +2601,7 @@ syntax MacroRulesDefinition
     ;
 
 syntax MacroRuleList
-    = MacroRule (";" MacroRule)* ";"?
+    = {MacroRule ";"}+ ";"?
     ;
 
 syntax MacroRule

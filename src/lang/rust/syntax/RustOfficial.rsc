@@ -1,6 +1,6 @@
 @contributors{Adrian Zborowski - ak.zborowski@gmail.com}
 
-module lang::rust::\syntax::Rust
+module lang::rust::\syntax::RustOfficial
 
 
 layout NoCurlyBefore 
