@@ -10,17 +10,17 @@ lexical Comment = "#" ![\n]* $;
 
 lexical WhiteSpaceOrComment = WSChar | Comment;
 
-layout Whitespace = WhiteSpaceOrComment*;
+layout Whitespace = WhiteSpaceOrComment* !>> [\ \t #];
 
 // Overall Structure
-start syntax TOML = Expression+ ;
+start syntax TOML = NewLine* {Expression NewLines}+ NewLine* ;
 
 syntax Expression
-    = NewLine
-    | Keyval NewLine
-    | Table NewLine
+    = Keyval 
+    | Table 
     ;
 
+syntax NewLines = NewLine+;
 
 // Newline
 lexical NewLine = "\n" | "\r\n" ;
