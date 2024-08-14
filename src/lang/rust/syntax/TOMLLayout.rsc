@@ -1,42 +1,35 @@
 module lang::rust::\syntax::TOMLLayout
 
-
-
-lexical WSChar = [\ \t];
-
-lexical WS = WSChar*;
+lexical WSChar = [\ \t\n];
 
 lexical Comment = "#" ![\n]* $;
 
 lexical WhiteSpaceOrComment = WSChar | Comment;
 
-layout Whitespace = WhiteSpaceOrComment* !>> [\ \t #];
+layout Whitespace = WhiteSpaceOrComment* !>> [\ \t\n #];
 
 // Overall Structure
-start syntax TOML = NewLine* {Expression NewLines}+ NewLine* ;
+start syntax TOML = Section*;
 
-syntax Expression
-    = Keyval 
-    | Table 
-    ;
+syntax Section = Table Keyval*;
 
-syntax NewLines = NewLine+;
+// syntax Expression
+//     = Keyval
+//     | Table
+//     ;
 
-// Newline
-lexical NewLine = "\n" | "\r\n" ;
 
 lexical NonAscii = [\u0080-\uD7FF] | [\uE000-\u10FFFF];
 
 
 // Key-Value Pairs
-syntax Keyval = Key KeyvalSep Val ;
+syntax Keyval = Key "=" Val ;
 syntax Key = SimpleKey | DottedKey ;
 syntax SimpleKey = QuotedKey | UnquotedKey;
 syntax UnquotedKey = [A-Za-z0-9_\-]+;
 syntax QuotedKey = BasicString | LiteralString;
-syntax DottedKey = SimpleKey (DotSep SimpleKey)+;
-lexical DotSep =  "." ;
-lexical KeyvalSep =  "=" ;
+syntax DottedKey = SimpleKey "." {SimpleKey "."}* ;
+
 syntax Val = String | Boolean | Array | InlineTable | DateTime | Float | Integer ;
 
 // String
@@ -48,31 +41,31 @@ lexical BasicChar = BasicUnescaped | Escaped;
 lexical BasicUnescaped =  [\u0021] | [\u0023-\u005B] | [\u005D-\u007E] | NonAscii;
 lexical Escaped = Escape EscapeSeqChar;
 lexical Escape = "\\" ;
-lexical EscapeSeqChar = "\"" | "\\" | "b" | "f" | "n" | "r" | "t" 
-                       | "u" HEXDIG HEXDIG HEXDIG HEXDIG
-                       | "U" HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG ;
+lexical EscapeSeqChar = "\"" | "\\" | "b" | "f" | "n" | "r" | "t"
+                      | "u" HEXDIG HEXDIG HEXDIG HEXDIG
+                      | "U" HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG ;
 
 lexical HEXDIG = [0-9a-fA-F];
 
 
 // Multiline Basic String
-syntax MLBasicString = "\"\"\"" NewLine? MLBasicBody "\"\"\"";
+syntax MLBasicString = "\"\"\"" MLBasicBody "\"\"\"";
 syntax MLBasicBody = MLBContent* (MLBQuotes MLBContent+) MLBQuotes? ;
 
-syntax MLBContent = MLBChar | NewLine | MLBEscapedNL;
+syntax MLBContent = MLBChar | MLBEscapedNL;
 lexical MLBChar = MLBUnescaped | Escaped;
 lexical MLBQuotes =  "\"" | ("\"" "\"");
 lexical MLBUnescaped =  [\u0021\u0023-\u005B\u005D-\u007E] | NonAscii;
-lexical MLBEscapedNL = Escape NewLine+ (WSChar | NewLine)* ;
+lexical MLBEscapedNL = Escape;
 
 // Literal String
 lexical LiteralString = "\'" ([\u0009\u0020-\u0026\u0028-\u007E] | NonAscii)* "\'" ;
 
 // Multiline Literal String
-syntax MLLiteralString = "\'\'\'" NewLine? MLLiteralBody "\'\'\'";
+syntax MLLiteralString = "\'\'\'" MLLiteralBody "\'\'\'";
 syntax MLLiteralBody = MLLContent* (MLLQuotes MLLContent+)* MLLQuotes? ;
 
-syntax MLLContent = MLLChar | NewLine;
+syntax MLLContent = MLLChar;
 lexical MLLChar = [\u0009\u0020-\u0026\u0028-\u007E] | NonAscii;
 lexical MLLQuotes = "\'" | ("\'" "\'");
 
@@ -90,8 +83,8 @@ lexical BinInt = "0b" [0-1] ("_"? [0-1])*;
 
 // Float
 syntax Float
-    = FloatIntPart (Exp | (Frac Exp?))
-    | SpecialFloat;
+   = FloatIntPart (Exp | (Frac Exp?))
+   | SpecialFloat;
 
 syntax FloatIntPart = DecInt;
 syntax Frac = "." ZeroPrefixableInt;
@@ -119,12 +112,7 @@ syntax LocalDate = FullDate;
 syntax LocalTime = PartialTime;
 
 // Array
-syntax Array = "[" NewLine* ArrayValues? ","? NewLine* "]";
-
-syntax ArrayValues
-    = Val NewLine* "," NewLine* ArrayValues
-    | Val
-    ;
+syntax Array = "[" {Val ","}* ","?  "]";
 
 
 // Table
@@ -134,9 +122,8 @@ syntax StdTable = "[" Key "]" ;
 
 // Inline Table
 
-syntax InlineTable = "{"  InlineTableKeyVals?  "}" ;
-
-syntax InlineTableKeyVals = Keyval ("," InlineTableKeyVals)?;
+syntax InlineTable = "{"  {Keyval ","}*  "}" ;
 
 // Array Table
-syntax ArrayTable = "[[" Key "]]";
+
+syntax ArrayTable = "[[" Key "]]" ;
