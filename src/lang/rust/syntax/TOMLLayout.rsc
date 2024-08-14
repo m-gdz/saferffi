@@ -1,15 +1,24 @@
-module lang::rust::\syntax::TOML
+module lang::rust::\syntax::TOMLLayout
 
-// Overall Structure
-start syntax TOML = {Expression NewLine}+ ;
+
+
+lexical WSChar = [\ \t];
 
 lexical WS = WSChar*;
-lexical WSChar = [\u0020\u0009];
+
+lexical Comment = "#" ![\n]* $;
+
+lexical WhiteSpaceOrComment = WSChar | Comment;
+
+layout Whitespace = WhiteSpaceOrComment*;
+
+// Overall Structure
+start syntax TOML = Expression+ ;
 
 syntax Expression
-    = WS Comment?
-    | WS Keyval WS Comment?
-    | WS Table WS Comment?
+    = NewLine
+    | Keyval NewLine
+    | Table NewLine
     ;
 
 
@@ -19,8 +28,6 @@ lexical NewLine = "\n" | "\r\n" ;
 lexical NonAscii = [\u0080-\uD7FF] | [\uE000-\u10FFFF];
 
 
-lexical Comment = "#" ![\n]* $;
-
 // Key-Value Pairs
 syntax Keyval = Key KeyvalSep Val ;
 syntax Key = SimpleKey | DottedKey ;
@@ -28,8 +35,8 @@ syntax SimpleKey = QuotedKey | UnquotedKey;
 syntax UnquotedKey = [A-Za-z0-9_\-]+;
 syntax QuotedKey = BasicString | LiteralString;
 syntax DottedKey = SimpleKey (DotSep SimpleKey)+;
-lexical DotSep =  WS "." WS ;
-lexical KeyvalSep =  WS "=" WS ;
+lexical DotSep =  "." ;
+lexical KeyvalSep =  "=" ;
 syntax Val = String | Boolean | Array | InlineTable | DateTime | Float | Integer ;
 
 // String
@@ -38,7 +45,7 @@ syntax String = MLBasicString | BasicString | MLLiteralString | LiteralString ;
 // Basic String
 syntax BasicString = "\"" BasicChar* "\"" ;
 lexical BasicChar = BasicUnescaped | Escaped;
-lexical BasicUnescaped = WSChar | [\u0021] | [\u0023-\u005B] | [\u005D-\u007E] | NonAscii;
+lexical BasicUnescaped =  [\u0021] | [\u0023-\u005B] | [\u005D-\u007E] | NonAscii;
 lexical Escaped = Escape EscapeSeqChar;
 lexical Escape = "\\" ;
 lexical EscapeSeqChar = "\"" | "\\" | "b" | "f" | "n" | "r" | "t" 
@@ -55,8 +62,8 @@ syntax MLBasicBody = MLBContent* (MLBQuotes MLBContent+) MLBQuotes? ;
 syntax MLBContent = MLBChar | NewLine | MLBEscapedNL;
 lexical MLBChar = MLBUnescaped | Escaped;
 lexical MLBQuotes =  "\"" | ("\"" "\"");
-lexical MLBUnescaped =  WSChar | [\u0021\u0023-\u005B\u005D-\u007E] | NonAscii;
-lexical MLBEscapedNL = Escape WS NewLine+ (WSChar | NewLine)* ;
+lexical MLBUnescaped =  [\u0021\u0023-\u005B\u005D-\u007E] | NonAscii;
+lexical MLBEscapedNL = Escape NewLine+ (WSChar | NewLine)* ;
 
 // Literal String
 lexical LiteralString = "\'" ([\u0009\u0020-\u0026\u0028-\u007E] | NonAscii)* "\'" ;
@@ -112,31 +119,24 @@ syntax LocalDate = FullDate;
 syntax LocalTime = PartialTime;
 
 // Array
-syntax Array = "[" ArrayValues? WSCommentNewLine "]";
+syntax Array = "[" NewLine* ArrayValues? ","? NewLine* "]";
 
 syntax ArrayValues
-    = {ArrayBody ","}+ ","?
+    = Val NewLine* "," NewLine* ArrayValues
+    | Val
     ;
-
-syntax ArrayBody = 
-        WSCommentNewLine Val WSCommentNewLine
-    ;
-
-
-syntax WSCommentNewLine = (WSChar | (Comment? NewLine))*;
-
 
 
 // Table
 syntax Table = StdTable | ArrayTable ;
 
-syntax StdTable = "[" WS Key WS "]" ;
+syntax StdTable = "[" Key "]" ;
 
 // Inline Table
 
 syntax InlineTable = "{"  InlineTableKeyVals?  "}" ;
 
-syntax InlineTableKeyVals = Keyval ( WS "," WS InlineTableKeyVals)?;
+syntax InlineTableKeyVals = Keyval ("," InlineTableKeyVals)?;
 
 // Array Table
-syntax ArrayTable = "[[" WS Key WS "]]";
+syntax ArrayTable = "[[" Key "]]";
