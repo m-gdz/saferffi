@@ -60,8 +60,8 @@ lexical RawIdentifier
     ;
 
 lexical PureIdentifier
-    = XID_Start XID_Continue*
-    | "_" XID_Continue+
+    = [a-zA-Z] [a-zA-Z0-9_]*
+    | "_" [a-zA-Z0-9_]+
     ;
 
 lexical IdentifierOrUnderscore
@@ -77,7 +77,6 @@ syntax Renaming
 lexical XID_Start
     = [a-z]  // Lowercase letters
     | [A-Z]  // Uppercase letters
-    | "_"    // Underscore
     // | [\u00C0-\u00D6]  // À-Ö (Latin-1 Supplement)
     // | [\u00D8-\u00F6]  // Ø-ö (Latin-1 Supplement)
     // | [\u00F8-\u00FF]  // ø-ÿ (Latin-1 Supplement)
@@ -95,7 +94,7 @@ lexical XID_Start
 
 lexical XID_Continue 
     = XID_Start
-    | [0-9]  // Digits
+    | [_0-9]  // Digits
     ;
 
 // UNSURE A RawIdentifierKeyword is any keyword in category Keyword, except crate, self, Self, and super.
@@ -523,6 +522,8 @@ keyword Keyword
 
 // #### 3. Items ####
 
+syntax Items = Item* items;
+
 syntax Item
     = OuterAttributeOrDoc* (ItemWithVisibility | MacroItem)
     ;
@@ -810,7 +811,7 @@ syntax LifetimeIndication
     ;
 
 syntax LifetimeIndicationList
-    = LifetimeIndication ("+" LifetimeIndication)* "+"?
+    = {LifetimeIndication "+"}+ "+"?
     ;
 
 syntax ParenthesizedTraitBound
@@ -842,7 +843,7 @@ syntax AttributedLifetimeList
 // #### 5. Patterns ####
 
 syntax Pattern
-    = "|"? PatternWithoutAlternation ("|" PatternWithoutAlternation)*
+    = "|"? {PatternWithoutAlternation "|"}+
     ;
 
 syntax PatternList
@@ -865,7 +866,7 @@ syntax PatternWithoutRange
     | SlicePattern
     | StructPattern
     | TuplePattern
-    | UnderscorePattern
+    | "_"
     ;
 
 // 5.1.1 Identifier Patterns
@@ -1017,10 +1018,7 @@ syntax TuplePattern
     = "(" PatternList? ")"
     ;
 
-// 5.2.4 Underscore Patterns
-syntax UnderscorePattern
-    = "_"
-    ;
+
 
 // 5.3 Bindings Modes
 syntax Binding
@@ -1950,7 +1948,7 @@ syntax InnerAttributeOrDoc
     ;
 
 syntax InnerAttribute
-    = "#!" "[" AttributeContent "]"
+    = "#![" AttributeContent "]"
     ;
 
 syntax OuterAttributeOrDoc
@@ -1963,7 +1961,7 @@ syntax OuterAttributeOrDoc
 
 
 syntax OuterAttribute
-    = "#" "[" AttributeContent "]"
+    = "#[" AttributeContent "]"
     ;
 
 syntax AttributeContent
@@ -2539,13 +2537,12 @@ start syntax SourceFile
     Item*
     ;
 
-syntax ZeroWidthNoBreakSpace
+lexical ZeroWidthNoBreakSpace
     = "\uFEFF"
     ;
 
-syntax Shebang
-    = "#!" ![\n]* // <- UNSURE should use "Newline" but easier to write
-    ;
+lexical Shebang
+    = "#!" !>> "[" ![\n]* $;
 
 syntax Newline
     = "\n"

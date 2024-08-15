@@ -28,6 +28,7 @@ public list[Tree] Parse(list[loc] source_locs, bool verbose=false){
 	
 	for(source_loc <- source_locs){
 		try{
+			println("Parsing <source_loc>\n");
 			Tree source_tree = parse(#start[SourceFile], source_loc, allowAmbiguity=true);
 			
 			parsed += source_loc;
