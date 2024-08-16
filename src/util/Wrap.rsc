@@ -8,50 +8,6 @@ import lang::rust::\syntax::Ferrocene;
 import String;
 
 
-
-// start[SourceFile] wrap(start[SourceFile] file){
-//     file = top-down visit(file){
-//         case (Item) `extern "C" {
-//                     '<InnerAttributeOrDoc* attrs>
-//                     '<ExternItem* fns>
-//                     '}` =>
-//              (Item) `extern "C" {
-//                     '<InnerAttributeOrDoc* attrs>
-//                     '<ExternItem* wrapped_fns>
-//                     '}`
-//         when wrapped_fns := wrap_fns(fns)
-//     }
-//     return file;
-// }
-
-
-
-// list[Item] wrap_fns(ExternItem* fns){
-//     list[Item] new_items = [];
-//     fns = top-down visit(fns){
-//         case t: (FunctionDeclaration) `fn <Name name>();` :{
-//             new_items += [t];
-//             Name n = [Name] "safe_<name>";
-//             insert (FunctionDeclaration) `fn <Name n>();`;
-//         }
-//         case (FunctionDeclaration) `fn <Name name>(<FunctionParameterList fpl>);` :{
-//             Name n = [Name] "safe_<name>";
-//             insert (FunctionDeclaration) `fn <Name n>(<FunctionParameterList fpl>);`;
-//         }
-//         case (FunctionDeclaration) `fn <Name name>() <ReturnType rt> ;` :{
-//             Name n = [Name] "safe_<name>";
-//             insert (FunctionDeclaration) `fn <Name n>() <ReturnType rt>;`;
-//         }
-//         case (FunctionDeclaration) `fn <Name name>(<FunctionParameterList fpl>) <ReturnType rt>;` :{
-//             Name n = [Name] "safe_<name>";
-//             insert (FunctionDeclaration) `fn <Name n>(<FunctionParameterList fpl>) <ReturnType rt>;`;
-//         }
-
-//     }
-//     return new_items;
-// }
-
-
 start[SourceFile] wrap2(start[SourceFile] file){
     println("Wrapping functions");
     file = top-down visit(file){
@@ -74,6 +30,15 @@ list[FunctionDeclaration] extract_fns(Item* fns){
     list[FunctionDeclaration] fnds = [];
     top-down visit(fns){
         case t: (FunctionDeclaration) `fn <Name name>();` :{
+            fnds += t;
+        }
+        case t: (FunctionDeclaration) `fn <Name name>(<FunctionParameterList fpl>);` :{
+            fnds += t;
+        }
+        case t: (FunctionDeclaration) `fn <Name name>()<ReturnType rt>;` :{
+            fnds += t;
+        }
+        case t: (FunctionDeclaration) `fn <Name name>(<FunctionParameterList fpl>)<ReturnType rt>;` :{
             fnds += t;
         }
     }
@@ -114,20 +79,71 @@ ExternItem* find_extern_blocks(Item item){
 
 
 
-Item* insert_item(Item first, Item* tail) = (Items) `<Item first><Item* tail>`.items;
+// Item* insert_item(Item first, Item* tail) = (Items) `<Item first><Item* tail>`.items;
 
-Item* append_item(Item* prefix, Item* postfix) = (Items) `<Item* prefix><Item* postfix>`.items;
+// Item* append_item(Item* prefix, Item* postfix) = (Items) `<Item* prefix><Item* postfix>`.items;
 
-Item* convert(list[Item] idList) { 
-    idStr = intercalate("\n", [ "<id>" | id <- idList ]); 
-    Items idC = [Items] idStr; 
-    return idC.items; 
+Item* convert(list[Item] itemList) { 
+    itemStr = intercalate("\n", [ "<item>" | item <- itemList ]); 
+    Items itemC = [Items] itemStr; 
+    return itemC.items; 
 }
 
 Item* implement(Item* items, list[FunctionDeclaration] extern_fns) = visit(items){
-    case fn: (FunctionDeclaration) `fn <Name name>();` : {
-                    Name n = [Name] "safe_<name>";
-                    Expression body = [Expression] "unsafe {<name>();}";
-                    insert (FunctionDeclaration) `fn <Name n>(){<Expression body>}`;
-              }
+    case (FunctionDeclaration) `fn <Name name>();` :{
+            Name n = [Name] "safe_<name>";
+            Expression body = [Expression] "unsafe {<name>_1();}";
+            insert (FunctionDeclaration) `fn <Name n>(){<Expression body>}`;
+        }
+    case (FunctionDeclaration) `fn <Name name>(<FunctionParameterList fpl>);` :{
+            Name n = [Name] "safe_<name>";
+            ArgumentOperandList args = params_to_arguments(fpl);
+            Expression body = [Expression] "unsafe {<name>_2(<args>);}";
+            insert (FunctionDeclaration) `fn <Name n>(<FunctionParameterList fpl>){<Expression body>}`;
+    }
+    case (FunctionDeclaration) `fn <Name name>() <ReturnType rt>;` :{
+            Name n = [Name] "safe_<name>";
+            Expression body = [Expression] "unsafe {<name>_3();}";
+            insert (FunctionDeclaration) `fn <Name n>() <ReturnType rt> {<Expression body>}`;
+    }
+    case (FunctionDeclaration) `fn <Name name>(<FunctionParameterList fpl>)<ReturnType rt>;` :{
+            Name n = [Name] "safe_<name>";
+            ArgumentOperandList args = params_to_arguments(fpl);
+            Expression body = [Expression] "unsafe {<name>_4(<args>);}";
+            insert (FunctionDeclaration) `fn <Name n>(<FunctionParameterList fpl>) <ReturnType rt> {<Expression body>}`;
+    }
 };
+
+
+// ArgumentOperandList convert_params(FunctionParameterList fpl) = visit(fpl){
+//     case (FunctionParameter) `` :{
+//     }
+// };
+
+
+// list[tuple[Identifier, TypeSpecification]] extract_parameters(FunctionParameterList fpl){
+//     list[tuple[Identifier, TypeSpecification]] params = [];
+//     visit(fpl){
+//         case(FunctionParameterPattern) `<PatternWithoutAlternation pattern> :<TypeSpecification typ>` :{
+//             params += <extract_id(pattern), typ>;
+//         }
+//     }
+//     return params;
+// } 
+
+ArgumentOperandList params_to_arguments(FunctionParameterList fpl){
+    list[str] params = [];
+    visit(fpl){
+        case(FunctionParameterPattern) `<PatternWithoutAlternation pattern> :<TypeSpecification typ>` :{
+            params += extract_id(pattern);
+        }
+    }
+    return [ArgumentOperandList] intercalate(", ", params);
+} 
+
+str extract_id(PatternWithoutAlternation pattern){
+    str raw_pattern = unparse(pattern);
+    return raw_pattern;
+}
+
+
