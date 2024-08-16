@@ -60,23 +60,6 @@ Item repack(FunctionDeclaration fn){
     return [Item] raw_fn;
 }
 
-ExternItem* find_extern_blocks(Item item){
-
-    top-down visit(items){
-        case (Item) `extern "C" {
-                    '<InnerAttributeOrDoc* attrs>
-                    '<ExternItem* fns>
-                    '}` :{
-            ExternItem* wrapped_fns = wrap_fns(fns);
-            insert (Item) `extern "C" {
-                    '<InnerAttributeOrDoc* attrs>
-                    '<ExternItem* wrapped_fns>
-                    '}`;
-        }
-    }
-    return items;
-}
-
 
 
 // Item* insert_item(Item first, Item* tail) = (Items) `<Item first><Item* tail>`.items;
