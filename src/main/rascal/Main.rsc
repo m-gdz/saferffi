@@ -23,6 +23,7 @@ int main(int testArgument=0) {
     return testArgument;
 }
 
+// work in progress
 public void SaferFFI(loc project_loc, str extension=".rs", bool verbose=false){
 	datetime timer_start = now();
 	
@@ -40,3 +41,4 @@ public void SaferFFI(loc project_loc, str extension=".rs", bool verbose=false){
 	println(Timer(timer_duration));
 
 }
+
