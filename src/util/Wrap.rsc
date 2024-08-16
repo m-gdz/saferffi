@@ -126,8 +126,8 @@ Item* convert(list[Item] idList) {
 
 Item* implement(Item* items, list[FunctionDeclaration] extern_fns) = visit(items){
     case fn: (FunctionDeclaration) `fn <Name name>();` : {
-                    println("found one");
                     Name n = [Name] "safe_<name>";
-                    insert (FunctionDeclaration) `fn <Name n>(){}`;
+                    Expression body = [Expression] "unsafe {<name>();}";
+                    insert (FunctionDeclaration) `fn <Name n>(){<Expression body>}`;
               }
 };
