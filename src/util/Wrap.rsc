@@ -59,10 +59,11 @@ start[SourceFile] wrap2(start[SourceFile] file){
                           '<Item* items>` =>
              (SourceFile) `<InnerAttributeOrDoc* attrs>
                           '<Item* items>
-                          '<Item* new_items>`
+                          '<Item* newer_items>`
         when fns := extract_fns(items), 
              repacked_fns := repack_fns(fns),
-             new_items := convert(repacked_fns)
+             new_items := convert(repacked_fns),
+             newer_items := implement(new_items, fns)
 
     }
     return file;
@@ -123,3 +124,10 @@ Item* convert(list[Item] idList) {
     return idC.items; 
 }
 
+Item* implement(Item* items, list[FunctionDeclaration] extern_fns) = visit(items){
+    case fn: (FunctionDeclaration) `fn <Name name>();` : {
+                    println("found one");
+                    Name n = [Name] "safe_<name>";
+                    insert (FunctionDeclaration) `fn <Name n>(){}`;
+              }
+};
