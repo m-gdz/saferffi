@@ -1,10 +1,6 @@
 module util::Config
 
-import IO;
-import Map;
-import Set;
-import ParseTree;
-import lang::rust::\syntax::TOMLLayout;
+import lang::rust::\syntax::TOML;
 
 start[TOML] addBindgen(start[TOML] toml){
     toml = top-down visit(toml){

@@ -1,4 +1,4 @@
-module Main
+module SaferFFI
 
 // Std
 import IO;
@@ -18,9 +18,9 @@ import util::Walk;
 import util::Parse;
 import util::Timer;
 
-int main(int testArgument=0) {
-    println("argument: <testArgument>");
-    return testArgument;
+int main(list[str] args) {
+    println("argument: <args[-1]>");
+    return 0;
 }
 
 // work in progress

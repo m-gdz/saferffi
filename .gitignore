@@ -1,1 +1,4 @@
+src/main/rascal/rascal.jar
 test/input/
+editors/code/out
+editors/code/node_modules
