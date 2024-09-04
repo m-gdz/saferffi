@@ -39,6 +39,7 @@ public list[Tree] Parse(list[loc] source_locs, bool verbose=false){
 			
 			source_tree @ \loc = source_loc;
 			source_trees += source_tree;
+			println("Parsed: <source_loc>");
 		}catch ParseError(_):{
 			failed += source_loc;
 			println("Failed: <source_loc>");

@@ -14,12 +14,12 @@
   "contributes": {
     "commands": [
       {
-        "command": "oxidize.helloWorld",
-        "title": "Hello World"
+        "command": "oxidize.refactor",
+        "title": "Oxidize: Refactor"
       },
       {
-        "command": "extension.getCallGraph",
-        "title": "Get Call Graph"
+        "command": "oxidize.getDiagnostics",
+        "title": "Oxidize: Get Diagnostics"
       }
     ]
   },

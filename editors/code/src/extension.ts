@@ -4,7 +4,7 @@ import * as cp from 'child_process';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
-import { generateCallHierarchyForWorkspace } from './callgraph';
+import { generateCallHierarchyForWorkspace, saveCallGraphToDisk } from './callgraph';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -17,31 +17,25 @@ export function activate(context: vscode.ExtensionContext) {
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('oxidize.helloWorld', () => {
+	const disposable = vscode.commands.registerCommand('oxidize.refactor', async () => {
 		// The code you place here will be executed every time your command is executed
 		// Display a message box to the user
 		//vscode.window.showInformationMessage('Hello World from oxidize: '+context.extensionPath);
-		
+        let projectPath = ""+ vscode.workspace.workspaceFolders?.[0].uri.fsPath;
+        let callgraph = await generateCallHierarchyForWorkspace();
+        let callGraphPath = path.join(context.extensionPath, 'callgraph.json')
+        if(callgraph){
+            await saveCallGraphToDisk(callgraph, callGraphPath);
+            console.log(callGraphPath);
+            vscode.window.showInformationMessage("Call hierarchy generated and saved successfully.");
+        }
 
         // Spawn the Java process running Rascal
-        const rascalProcess = cp.spawn('java', ['-Xmx1G', '-Xss32m', '-jar', "rascal.jar", "SaferFFI.rsc", "nice !"], {
-			cwd: path.join(context.extensionPath, '../../src/main/rascal'),
+        const rascalProcess = cp.spawn('java', ['-Xmx1G', '-Xss32m', '-jar', "rascal.jar", "SaferFFI.rsc", projectPath, "-c", callGraphPath], {
+            cwd: path.join(context.extensionPath, '../../src/main/rascal'),
             stdio: ['pipe', 'pipe', 'pipe'] // stdin, stdout, stderr
         });
 
-        // Example complex data structure
-        // const complexData = {
-        //     name: "MyProject",
-        //     files: ["file1.rsc", "file2.rsc"],
-        //     config: {
-        //         optionA: true,
-        //         optionB: "valueB"
-        //     }
-        // };
-
-        // Serialize the data structure to JSON and send it to Rascal via stdin
-        // rascalProcess.stdin.write(JSON.stringify(complexData));
-        // rascalProcess.stdin.end();
 
         // Listen for data from Rascal's stdout
         let result = '';
@@ -62,16 +56,26 @@ export function activate(context: vscode.ExtensionContext) {
         rascalProcess.on('close', (code) => {
             vscode.window.showInformationMessage(`Rascal process exited with code ${code}`);
         });
+        
 	});
 
 	context.subscriptions.push(disposable);
 
-	// New command registration
-    let newCommandDisposable = vscode.commands.registerCommand('extension.getCallGraph', () => {
-        generateCallHierarchyForWorkspace();
+    const disposable2 = vscode.commands.registerCommand('oxidize.getDiagnostics', async () => {
+        const allDiagnostics = vscode.languages.getDiagnostics();
+        for (const [uri, diagnostics] of allDiagnostics) {
+            console.log(uri.toString());
+            for (const diagnostic of diagnostics) {
+                if (diagnostic.message.startsWith("unnecessary `unsafe` block")) {
+                    const range = diagnostic.range;
+                    vscode.window.showInformationMessage(`Unnecessary unsafe block at ${range.start.line}:${range.start.character} - ${range.end.line}:${range.end.character}`);
+                }
+            }
+        }
     });
 
-    context.subscriptions.push(newCommandDisposable);
+    context.subscriptions.push(disposable2);
+
 }
 
 // This method is called when your extension is deactivated
