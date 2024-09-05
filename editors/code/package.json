@@ -14,8 +14,19 @@
   "contributes": {
     "commands": [
       {
-        "command": "oxidize.refactor",
-        "title": "Oxidize: Refactor"
+        "command": "oxidize.refactor.wrap",
+        "title": "Wrap Refactor",
+        "category": "SaferFFI"
+      },
+      {
+        "command": "oxidize.refactor.config",
+        "title": "Config Refactor",
+        "category": "SaferFFI"
+      },
+      {
+        "command": "oxidize.refactor.removeunsafe",
+        "title": "Remove Unsafe Refactor",
+        "category": "SaferFFI"
       },
       {
         "command": "oxidize.getDiagnostics",

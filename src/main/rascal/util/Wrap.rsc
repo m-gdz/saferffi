@@ -6,6 +6,7 @@ import Set;
 import ParseTree;
 import lang::rust::\syntax::Ferrocene;
 import String;
+import Type;
 
 
 start[SourceFile] wrap2(start[SourceFile] file){
@@ -33,12 +34,15 @@ list[FunctionDeclaration] extract_fns(Item* fns){
             fnds += t;
         }
         case t: (FunctionDeclaration) `fn <Name name>(<FunctionParameterList fpl>);` :{
+            println(t);
             fnds += t;
         }
         case t: (FunctionDeclaration) `fn <Name name>()<ReturnType rt>;` :{
+            println(t);
             fnds += t;
         }
         case t: (FunctionDeclaration) `fn <Name name>(<FunctionParameterList fpl>)<ReturnType rt>;` :{
+            println(t);
             fnds += t;
         }
     }

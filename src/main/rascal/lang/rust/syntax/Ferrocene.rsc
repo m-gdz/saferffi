@@ -860,7 +860,7 @@ syntax PatternWithoutRange
     | LiteralPattern
     | MacroInvocation
     | ParenthesizedPattern
-    | PathPattern
+    | pathPat: PathPattern
     | ReferencePattern
     | RestPattern
     | SlicePattern
@@ -1740,8 +1740,9 @@ syntax Statement
     ;
 
 // 8.1 Let Statements
-syntax LetStatement
-    = OuterAttributeOrDoc* "let" PatternWithoutAlternation TypeAscription? LetInitializer? ";"
+syntax LetStatement // MODIFIED
+    = OuterAttributeOrDoc* "let" PatternWithoutRange!pathPat TypeAscription? LetInitializer? ";"
+    | OuterAttributeOrDoc* "let" RangePattern TypeAscription? LetInitializer? ";"
     ;
 
 syntax LetInitializer

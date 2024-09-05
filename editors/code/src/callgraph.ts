@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import * as path from 'path';
+import { normalizedPath, locationToString } from './utils';
 
 export async function generateCallHierarchyForWorkspace() {
     // 1. Create a CancellationTokenSource
@@ -129,19 +129,7 @@ export async function saveCallGraphToDisk(callGraph: Map<string, Set<string>>, f
     }
 }
 
-function locationToString(uri: vscode.Uri, range: vscode.Range, document: vscode.TextDocument): string {
-    const offset = document.offsetAt(range.start);
-    const length = document.offsetAt(range.end) - offset;
-    const beginLine = range.start.line;
-    const beginColumn = range.start.character;
-    const endLine = range.end.line;
-    const endColumn = range.end.character;
 
-    return `|${uri.toString()}|(${offset},${length},<${beginLine},${beginColumn}>,<${endLine},${endColumn}>)`;
-}
 
 const FUNC_KINDS: readonly vscode.SymbolKind[] = [vscode.SymbolKind.Function, vscode.SymbolKind.Method, vscode.SymbolKind.Constructor];
 
-function normalizedPath(path: string): string {
-    return process.platform === 'win32' ? path.replace(/^\/\w+(?=:)/, drive => drive.toUpperCase()) : path;
-}
