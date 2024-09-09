@@ -14,12 +14,12 @@ start[SourceFile] removeunsafe(start[SourceFile] file, list[loc] unused_unsafe_b
     file = top-down visit(file){
         case t: (ExpressionWithBlock) `unsafe <BlockExpression expr>` => 
                 (ExpressionWithBlock) `<BlockExpression expr>`
-        when hasOffset(unused_unsafe_blocks, t.src.offset)
+        when isUnnecessary(t.src.offset, unused_unsafe_blocks)
     }
     return file;
 }
 
-bool hasOffset(list[loc] locs, int offset) {
+bool isUnnecessary(int offset, list[loc] locs) {
     for (loc l <- locs) {
         if (l.offset == offset) {
             return true;

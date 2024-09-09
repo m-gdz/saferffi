@@ -70,7 +70,7 @@ async function runRascalCommand(context: vscode.ExtensionContext, rascalArgs: st
     console.log(fullArgs);
     // Spawn the Java process running Rascal
     const rascalProcess = cp.spawn('java', fullArgs, {
-        cwd: path.join(context.extensionPath, '../../src/main/rascal'),
+        cwd: path.join(context.extensionPath, 'resources/main/rascal'),
         stdio: ['pipe', 'pipe', 'pipe'] // stdin, stdout, stderr
     });
 

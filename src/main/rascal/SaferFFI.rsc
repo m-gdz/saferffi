@@ -20,6 +20,7 @@ import util::Parse;
 import util::Timer;
 import util::Wrap;
 import util::RemoveUnsafe;
+import util::Config;
 
 import util::Maybe;
 
@@ -337,7 +338,30 @@ public void refactorRemoveUnsafe(list[Tree] source_trees, loc project_loc, loc u
 
 // Refactoring strategy for "config"
 public void refactorConfig(list[Tree] source_trees, loc project_loc, bool verbose) {
-    println("Running config refactoring...");
+    if (verbose) {
+			println("Running config refactoring...");
+	}
+	int count = 0;
+	for(st <- source_trees){
+	
+			if(verbose){
+					count += 1;
+					print("\rProcessing file <count> out of <size(source_trees)>...");
+			}
+	
+			str project_path = project_loc.path;
+			str file_path = st@\loc.path;
+			
+			str new_project_path = (project_loc.parent + (project_loc.file + "_configured/")).path;
+			loc new_file_path = |file:///| + replaceFirst(file_path, project_path, new_project_path);
+			
+			Tree toml = addBindgen(st);
+			writeFile(new_file_path, toml);
+	}
+	if(verbose){
+			print("\n");
+	}
+
 }
 
 
