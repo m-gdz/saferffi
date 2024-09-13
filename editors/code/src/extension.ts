@@ -62,39 +62,6 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 
-async function runRascalCommand2(context: vscode.ExtensionContext, rascalArgs: string[] = [], additionalArgs: string[] = []) {
-    let projectPath = "" + vscode.workspace.workspaceFolders?.[0].uri.fsPath;
-
-    // Combine Rascal args with any additional arguments
-    const fullArgs = ['-Xmx1G', '-Xss32m', '-jar', "rascal.jar", ...rascalArgs, ...additionalArgs, projectPath];
-    console.log(fullArgs);
-    // Spawn the Java process running Rascal
-    const rascalProcess = cp.spawn('java', fullArgs, {
-        cwd: path.join(context.extensionPath, 'resources/main/rascal'),
-        stdio: ['pipe', 'pipe', 'pipe'] // stdin, stdout, stderr
-    });
-
-    // Listen for data from Rascal's stdout
-    let result = '';
-    rascalProcess.stdout.on('data', (data) => {
-        result += data.toString();  // Collect the data
-    });
-
-    // Handle completion of the process
-    rascalProcess.stdout.on('end', () => {
-        vscode.window.showInformationMessage(`Rascal Output: ${result}`);
-    });
-
-    // Handle errors
-    rascalProcess.stderr.on('data', (data) => {
-        vscode.window.showErrorMessage(`Rascal Error: ${data.toString()}`);
-    });
-
-    rascalProcess.on('close', (code) => {
-        vscode.window.showInformationMessage(`Rascal process exited with code ${code}`);
-    });
-}
-
 async function runRascalCommand(context: vscode.ExtensionContext, rascalArgs: string[] = [], additionalArgs: string[] = []) {
     vscode.window.withProgress({
         location: vscode.ProgressLocation.Notification,

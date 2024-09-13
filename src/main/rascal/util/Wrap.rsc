@@ -19,7 +19,7 @@ start[SourceFile] wrap2(start[SourceFile] file){
                           '<Item* newer_items>`
         when fns := extract_fns(items), 
              repacked_fns := repack_fns(fns),
-             new_items := convert(repacked_fns),
+             new_items := convert_items(repacked_fns),
              newer_items := implement(new_items, fns)
 
     }
@@ -70,10 +70,16 @@ Item repack(FunctionDeclaration fn){
 
 // Item* append_item(Item* prefix, Item* postfix) = (Items) `<Item* prefix><Item* postfix>`.items;
 
-Item* convert(list[Item] itemList) { 
+Item* convert_items(list[Item] itemList) { 
     itemStr = intercalate("\n", [ "<item>" | item <- itemList ]); 
     Items itemC = [Items] itemStr; 
     return itemC.items; 
+}
+
+Statement* convert_stmts(list[Statement] stmtList) { 
+    stmtStr = intercalate("\n", [ "<stmt>" | stmt <- stmtList ]); 
+    Statements stmtC = [Statements] stmtStr; 
+    return stmtC.statements; 
 }
 
 Item* implement(Item* items, list[FunctionDeclaration] extern_fns) = visit(items){
@@ -84,9 +90,12 @@ Item* implement(Item* items, list[FunctionDeclaration] extern_fns) = visit(items
         }
     case (FunctionDeclaration) `fn <Name name>(<FunctionParameterList fpl>);` :{
             Name n = [Name] "safe_<name>";
-            ArgumentOperandList args = params_to_arguments(fpl);
-            Expression body = [Expression] "unsafe {<name>_2(<args>);}";
-            insert (FunctionDeclaration) `fn <Name n>(<FunctionParameterList fpl>){<Expression body>}`;
+            <fpl2, args, stmts>  = rename_underscore_args(fpl);
+            Expression body = [Expression] "unsafe { <name>(<args>); }";
+            insert (FunctionDeclaration) `fn <Name n>(<FunctionParameterList fpl2>){
+                '    <Statement* stmts>
+                '    <Expression body>
+                '}`;
     }
     case (FunctionDeclaration) `fn <Name name>() <ReturnType rt>;` :{
             Name n = [Name] "safe_<name>";
@@ -95,7 +104,8 @@ Item* implement(Item* items, list[FunctionDeclaration] extern_fns) = visit(items
     }
     case (FunctionDeclaration) `fn <Name name>(<FunctionParameterList fpl>)<ReturnType rt>;` :{
             Name n = [Name] "safe_<name>";
-            ArgumentOperandList args = params_to_arguments(fpl);
+            <fpl2, args, stmts>  = rename_underscore_args(fpl);
+            //ArgumentOperandList args = params_to_arguments(fpl);
             Expression body = [Expression] "unsafe {<name>_4(<args>);}";
             insert (FunctionDeclaration) `fn <Name n>(<FunctionParameterList fpl>) <ReturnType rt> {<Expression body>}`;
     }
@@ -118,19 +128,52 @@ Item* implement(Item* items, list[FunctionDeclaration] extern_fns) = visit(items
 //     return params;
 // } 
 
-ArgumentOperandList params_to_arguments(FunctionParameterList fpl){
+tuple[FunctionParameterList, ArgumentOperandList, Statement*] rename_underscore_args(FunctionParameterList fpl){
+    int i = 0;
+    list[Statement] stmts = [];
     list[str] params = [];
-    visit(fpl){
-        case(FunctionParameterPattern) `<PatternWithoutAlternation pattern> :<TypeSpecification typ>` :{
-            params += extract_id(pattern);
+
+    // Here we are removing the variadic part of the function, as it not supported as is in Rust
+    fpl = visit(fpl){
+        case(FunctionParameterList) `<{FunctionParameter ","}+ prms>, _: ...` => 
+            (FunctionParameterList) `<{FunctionParameter ","}+ prms>`
+    }
+    fpl = visit(fpl){
+        case(FunctionParameterPattern) `_: <TypeSpecification typ>` :{ // Instead of underscore, we could match <PatternWithoutAlternation pattern>
+            str arg_name = "arg<i>";
+            TypeSpecification typ2 = visit(typ){
+                case (TypeSpecification) `*const libc::c_char`: {
+                    stmts += [Statement] "let <arg_name>_c = std::ffi::CString::new(arg<i>).expect(\"Failed to convert to C string\");";
+                    stmts += [Statement] "let <arg_name>_ptr = arg<i>_c.as_ptr();";
+                    arg_name = "<arg_name>_ptr";
+                    insert (TypeSpecification) `&str`;
+                }
+            };
+            PatternWithoutAlternation p = [PatternWithoutAlternation] "arg<i>";
+            params += arg_name;
+            i += 1;
+            insert (FunctionParameterPattern) `<PatternWithoutAlternation p>: <TypeSpecification typ2>`;
         }
     }
-    return [ArgumentOperandList] intercalate(", ", params);
+    ArgumentOperandList args = [ArgumentOperandList] intercalate(", ", params);
+    return <fpl, args, convert_stmts(stmts)>;
 } 
+
+
+// ArgumentOperandList params_to_arguments(FunctionParameterList fpl){
+//     list[str] params = [];
+//     visit(fpl){
+//         case(FunctionParameterPattern) `<PatternWithoutAlternation pattern> :<TypeSpecification typ>` :{
+//             params += extract_id(pattern);
+//         }
+//     }
+//     return [ArgumentOperandList] intercalate(", ", params);
+// } 
 
 str extract_id(PatternWithoutAlternation pattern){
     str raw_pattern = unparse(pattern);
     return raw_pattern;
 }
+
 
 

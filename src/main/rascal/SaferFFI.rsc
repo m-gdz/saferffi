@@ -286,6 +286,7 @@ public void refactorWrap(list[Tree] source_trees, loc project_loc, loc callgraph
 		loc new_file_path = |file:///| + replaceFirst(file_path, project_path, new_project_path);
 		
 		Tree wrap = wrap2(st);
+        println(st.src);
 		
 		writeFile(new_file_path, wrap);
 	}

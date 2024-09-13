@@ -1731,6 +1731,9 @@ syntax StaticInitializer
     ;
 
 // #### 8. Statements #### 
+
+syntax Statements = Statement* statements;
+
 syntax Statement
     = ExpressionStatement
     | Item
