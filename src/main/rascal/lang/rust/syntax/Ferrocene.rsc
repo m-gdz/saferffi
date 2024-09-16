@@ -145,7 +145,7 @@ lexical ByteEscapeSequence
     ;
 
 lexical ByteStringLiteral
-    = "b\"" SimpleByteStringCharacter* "\""
+    = "b\"" ![\"]* "\""
     ;
 
 lexical ByteStringContent
@@ -154,7 +154,7 @@ lexical ByteStringContent
     ;
 
 lexical SimpleByteStringCharacter
-    = AsciiCharacter \ ('\u000D'|'\u0022'| '\u005C')
+    = AsciiCharacter \ ('\u000D'|'\u0022'| '\u005C' | "\"")
     ;
 
 

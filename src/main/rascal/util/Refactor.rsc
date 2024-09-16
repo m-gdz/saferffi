@@ -16,22 +16,6 @@ import util::Parse;
 import ValueIO;
 import lang::rust::\syntax::Ferrocene;
 
-void processFile() {
-    loc file = |file:///Users/potato/Developer/Projects/testproject/src/main.rs|;
-    start[SourceFile] tree = parse(#start[SourceFile], file, allowAmbiguity=true);
-    
-    loc fileLoc = |file:///Users/potato/Developer/Projects/testproject/src/main.rs|(17,41,<1,4>,<1,45>);
-    TreeSearchResult[FunctionDeclaration] searchResult = treeAt(#FunctionDeclaration, fileLoc, tree);
-    
-    Tree subtree;
-    if (treeFound(FunctionDeclaration foundTree) := searchResult) {
-        subtree = foundTree;
-    } else {
-        throw "The given position (loc) is not found in the tree";
-    }
-    
-    println(prettyTree(subtree));
-}
 
 start[SourceFile] refactorCalls(start[SourceFile] sourceFile, map[str, list[loc]] callGraph, map[loc, FunctionDeclaration] wrappedFunctions) {
     map[loc, loc] flattenedCallGraph = flattenCallGraph(callGraph);
@@ -39,12 +23,13 @@ start[SourceFile] refactorCalls(start[SourceFile] sourceFile, map[str, list[loc]
     return top-down visit(sourceFile) {
         case t: (CallExpression) `<CallOperand operand>(<ArgumentOperandList args>)` : {
             loc fnDeclaration = findCallInGraph(operand.src, flattenedCallGraph);
-        
             if (fnDeclaration != |unknown:///|) {
                 Maybe[FunctionDeclaration] maybeFn = getFunctionDeclaration(fnDeclaration, wrappedFunctions);
             
                 if (!(maybeFn is nothing)) {
-                    //println("Found a call to a wrapped function: <unparse(maybeFn.val)>");
+
+                    println("Found a call to a wrapped function: <unparse(maybeFn.val)>");
+                    println(args);
                     ArgumentOperandList newArgs = updateArguments(args);
                     CallOperand newOperand = renameCall(operand);
                     insert (CallExpression) `<CallOperand newOperand>(<ArgumentOperandList newArgs>)`;
