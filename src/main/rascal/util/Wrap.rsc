@@ -9,43 +9,61 @@ import String;
 import Type;
 
 
-start[SourceFile] wrap2(start[SourceFile] file){
+map[loc, FunctionDeclaration] loc2fn = ();
+
+
+tuple[start[SourceFile] file, map[loc, FunctionDeclaration] loc2fn] wrap2(start[SourceFile] file){
     println("Wrapping functions");
+    loc2fn = ();
     file = top-down visit(file){
         case (SourceFile) `<InnerAttributeOrDoc* attrs>
-                          '<Item* items>` =>
+                          '<Item* items>
+                          'extern "C" {
+                          '     <InnerAttributeOrDoc* ext_attrs>
+                          '     <ExternItem* extern_items>
+                          '}
+                          '<Item* items2>` =>
              (SourceFile) `<InnerAttributeOrDoc* attrs>
                           '<Item* items>
-                          '<Item* newer_items>`
-        when fns := extract_fns(items), 
-             repacked_fns := repack_fns(fns),
-             new_items := convert_items(repacked_fns),
-             newer_items := implement(new_items, fns)
-
+                          'extern "C" {
+                          '     <InnerAttributeOrDoc* ext_attrs>
+                          '     <ExternItem* extern_items>
+                          '}
+                          '<Item* newer_items>
+                          '<Item* items2>`
+        when fns := extract_fns(extern_items), 
+             wrapped_fns := implement(fns),
+             repacked_fns := repack_fns(wrapped_fns),
+             newer_items := convert_items(repacked_fns)
     }
-    return file;
+    return  <file, loc2fn>;
 }
 
-list[FunctionDeclaration] extract_fns(Item* fns){
+
+
+
+list[FunctionDeclaration] extract_fns(ExternItem* fns){
     println("Extracting functions");
     list[FunctionDeclaration] fnds = [];
     top-down visit(fns){
         case t: (FunctionDeclaration) `fn <Name name>();` :{
+            
             fnds += t;
         }
         case t: (FunctionDeclaration) `fn <Name name>(<FunctionParameterList fpl>);` :{
-            println(t);
+            
             fnds += t;
         }
         case t: (FunctionDeclaration) `fn <Name name>()<ReturnType rt>;` :{
-            println(t);
+            
             fnds += t;
         }
         case t: (FunctionDeclaration) `fn <Name name>(<FunctionParameterList fpl>)<ReturnType rt>;` :{
-            println(t);
+            
             fnds += t;
         }
     }
+    println("Extracted functions: done");
     return fnds;
 }
 
@@ -82,34 +100,55 @@ Statement* convert_stmts(list[Statement] stmtList) {
     return stmtC.statements; 
 }
 
-Item* implement(Item* items, list[FunctionDeclaration] extern_fns) = visit(items){
-    case (FunctionDeclaration) `fn <Name name>();` :{
-            Name n = [Name] "safe_<name>";
-            Expression body = [Expression] "unsafe {<name>_1();}";
-            insert (FunctionDeclaration) `fn <Name n>(){<Expression body>}`;
+list[FunctionDeclaration] implement(list[FunctionDeclaration] extern_fns) = visit(extern_fns){
+    case t: (FunctionDeclaration) `fn <Name name>();` :{
+            println("Implementing function: <t.src>");
+            Name n = [Name] "<name>_wrapped";
+            Expression body = [Expression] "unsafe { <name>(); }";
+            FunctionDeclaration toInsert = (FunctionDeclaration) `fn <Name n>(){
+                '    <Expression body>
+                '}`;
+            loc2fn += (t.src: toInsert);
+            insert toInsert;
         }
-    case (FunctionDeclaration) `fn <Name name>(<FunctionParameterList fpl>);` :{
-            Name n = [Name] "safe_<name>";
+    case t: (FunctionDeclaration) `fn <Name name>(<FunctionParameterList fpl>);` :{
+            println("Implementing function: <t.src>");
+            Name n = [Name] "<name>_wrapped";
             <fpl2, args, stmts>  = rename_underscore_args(fpl);
             Expression body = [Expression] "unsafe { <name>(<args>); }";
-            insert (FunctionDeclaration) `fn <Name n>(<FunctionParameterList fpl2>){
+            FunctionDeclaration toInsert = (FunctionDeclaration) `fn <Name n>(<FunctionParameterList fpl2>){
                 '    <Statement* stmts>
                 '    <Expression body>
                 '}`;
+            loc2fn += (t.src: toInsert);
+            insert toInsert;
     }
-    case (FunctionDeclaration) `fn <Name name>() <ReturnType rt>;` :{
-            Name n = [Name] "safe_<name>";
-            Expression body = [Expression] "unsafe {<name>_3();}";
-            insert (FunctionDeclaration) `fn <Name n>() <ReturnType rt> {<Expression body>}`;
+    case t: (FunctionDeclaration) `fn <Name name>()<ReturnType rt>;` :{
+            println("Implementing function: <t.src>");
+            Name n = [Name] "<name>_wrapped";
+            Expression body = [Expression] "unsafe { <name>() }";
+            FunctionDeclaration toInsert = (FunctionDeclaration) `fn <Name n>()<ReturnType rt>{
+                '    <Expression body>
+                '}`;
+            loc2fn += (t.src: toInsert);
+            insert toInsert;
     }
-    case (FunctionDeclaration) `fn <Name name>(<FunctionParameterList fpl>)<ReturnType rt>;` :{
-            Name n = [Name] "safe_<name>";
+    case t: (FunctionDeclaration) `fn <Name name>(<FunctionParameterList fpl>)<ReturnType rt>;` :{
+            println("Implementing function: <t.src>");
+            Name n = [Name] "<name>_wrapped";
             <fpl2, args, stmts>  = rename_underscore_args(fpl);
-            //ArgumentOperandList args = params_to_arguments(fpl);
-            Expression body = [Expression] "unsafe {<name>_4(<args>);}";
-            insert (FunctionDeclaration) `fn <Name n>(<FunctionParameterList fpl>) <ReturnType rt> {<Expression body>}`;
+            Expression body = [Expression] "unsafe { <name>(<args>) }";
+            FunctionDeclaration toInsert = (FunctionDeclaration) `fn <Name n>(<FunctionParameterList fpl2>)<ReturnType rt>{
+                '    <Statement* stmts>
+                '    <Expression body>
+                '}`;
+            loc2fn += (t.src: toInsert);
+            insert toInsert;
     }
 };
+
+
+
 
 
 // ArgumentOperandList convert_params(FunctionParameterList fpl) = visit(fpl){
@@ -139,7 +178,7 @@ tuple[FunctionParameterList, ArgumentOperandList, Statement*] rename_underscore_
             (FunctionParameterList) `<{FunctionParameter ","}+ prms>`
     }
     fpl = visit(fpl){
-        case(FunctionParameterPattern) `_: <TypeSpecification typ>` :{ // Instead of underscore, we could match <PatternWithoutAlternation pattern>
+        case(FunctionParameterPattern) `<PatternWithoutAlternation pattern>: <TypeSpecification typ>` :{ // Instead of underscore, we could match <PatternWithoutAlternation pattern>
             str arg_name = "arg<i>";
             TypeSpecification typ2 = visit(typ){
                 case (TypeSpecification) `*const libc::c_char`: {

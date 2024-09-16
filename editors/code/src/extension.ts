@@ -6,6 +6,7 @@ import * as vscode from 'vscode';
 
 import { generateCallHierarchyForWorkspace, saveCallGraphToDisk } from './callgraph';
 import { findUnnecessaryUnsafeBlocks, saveUnnecessaryUnsafeBlocksToDisk } from './unusedunsafe';
+import { generateReferenceMapForWorkspace, saveReferenceMapToDisk } from './references';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -21,19 +22,36 @@ export function activate(context: vscode.ExtensionContext) {
 
 
     const disposableWrap = vscode.commands.registerCommand('oxidize.refactor.wrap', async () => {
-        let callgraph = await generateCallHierarchyForWorkspace();
-        let callGraphPath = path.join(context.extensionPath, 'callgraph.json');
+        let referenceMap = await generateReferenceMapForWorkspace();
 
-        if (callgraph) {
-            await saveCallGraphToDisk(callgraph, callGraphPath);
-            console.log(callGraphPath);
-            vscode.window.showInformationMessage("Call hierarchy generated and saved successfully.");
+        let referenceMapPath = path.join(context.extensionPath, 'references.json');
 
-            // Pass the generated callGraphPath as an additional argument to runRascalCommand
-            await runRascalCommand(context, ['SaferFFI.rsc', '-v', 'wrap'], [callGraphPath]);
+
+        if (referenceMap) {
+
+            await saveReferenceMapToDisk(referenceMap, referenceMapPath);
+            vscode.window.showInformationMessage("Reference map generated and saved successfully.");
+            await runRascalCommand(context, ['SaferFFI.rsc', '-v', 'wrap'], [referenceMapPath]);
+
         } else {
-            vscode.window.showErrorMessage('Failed to generate callgraph.');
+            vscode.window.showErrorMessage("Failed to save reference map.");
         }
+
+        // let callgraph = await generateCallHierarchyForWorkspace();
+
+
+        // let callGraphPath = path.join(context.extensionPath, 'callgraph.json');
+
+        // if (callgraph) {
+        //     await saveCallGraphToDisk(callgraph, callGraphPath);
+        //     console.log(callGraphPath);
+        //     vscode.window.showInformationMessage("Call hierarchy generated and saved successfully.");
+
+        //     // Pass the generated callGraphPath as an additional argument to runRascalCommand
+        //     await runRascalCommand(context, ['SaferFFI.rsc', '-v', 'wrap'], [callGraphPath]);
+        // } else {
+        //     vscode.window.showErrorMessage('Failed to generate callgraph.');
+        // }
     });
 
     context.subscriptions.push(disposableWrap);

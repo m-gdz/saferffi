@@ -125,43 +125,38 @@ lexical ByteContent
     | ByteEscape
     ;
 
-lexical ByteEscape
-    = "\\0"
-    | "\\\""
-    | "\\\'"
-    | "\\t"
-    | "\\n"
-    | "\\r"
-    | "\\\\"
-    | "\\x" OctalDigit HexadecimalDigit
-    ;
-
-// UNSURE A ByteCharacter is any character in category AsciiCharacter except characters 0x09 (horizontal tabulation), 0x0A (new line), 0x0D (carriage return), 0x27 (apostrophe), and 0x5C (reverse solidus).
 lexical ByteCharacter
-    = AsciiCharacter \ ('\u0009' | '\u000A' | '\u000D' | '\u0027' | '\u005C')
+    = AsciiCharacter \ ('\u0009'| '\u000A'| '\u000D'| '\u0027'| '\u005C')
     ;
 
-// 2.4.2 Byte String Literals
+lexical ByteEscape
+    = "\\" ByteEscapeSequence
+    ;
+
+lexical ByteEscapeSequence
+    = '0'
+    | '\"'
+    | '\''
+    | 't'
+    | 'n'
+    | 'r'
+    | '\\'
+    | 'x' HexadecimalDigit HexadecimalDigit
+    ;
 
 lexical ByteStringLiteral
-    = RawByteStringLiteral
-    | SimpleByteStringLiteral
+    = "b\"" SimpleByteStringCharacter* "\""
     ;
 
-lexical SimpleByteStringLiteral
-    = "b\"" SimpleByteStringContent* "\""
-    ;
-
-lexical SimpleByteStringContent
-    = ByteEscape
+lexical ByteStringContent
+    = //ByteEscape
     | SimpleByteStringCharacter
-    | StringContinuation
     ;
 
-// UNSURE A SimpleByteStringCharacter is any character in category AsciiCharacter except characters 0x0D (carriage return), 0x22 (quotation mark), and 0x5C (reverse solidus).
 lexical SimpleByteStringCharacter
-    = AsciiCharacter \ ('\u000D' | '\u0022' | '\u005C')
+    = AsciiCharacter \ ('\u000D'|'\u0022'| '\u005C')
     ;
+
 
 lexical RawByteStringLiteral
     = "br" RawByteStringContent

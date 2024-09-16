@@ -1,10 +1,9 @@
 {
-  "|file:///Users/potato/Developer/Projects/testproject/src/main.rs|(17,41,<1,4>,<1,45>)": [
-    "|file:///Users/potato/Developer/Projects/testproject/src/main.rs|(118,130,<9,0>,<16,1>)"
+  "|file:///Users/potato/Developer/Projects/testproject/src/main.rs|(17,29,<1,4>,<1,33>)": [
+    "|file:///Users/potato/Developer/Projects/testproject/src/main.rs|(92,130,<8,0>,<15,1>)"
   ],
-  "|file:///Users/potato/Developer/Projects/testproject/src/main.rs|(63,9,<2,4>,<2,13>)": [],
-  "|file:///Users/potato/Developer/Projects/testproject/src/main.rs|(76,40,<5,0>,<7,1>)": [
-    "|file:///Users/potato/Developer/Projects/testproject/src/main.rs|(118,130,<9,0>,<16,1>)"
+  "|file:///Users/potato/Developer/Projects/testproject/src/main.rs|(50,40,<4,0>,<6,1>)": [
+    "|file:///Users/potato/Developer/Projects/testproject/src/main.rs|(92,130,<8,0>,<15,1>)"
   ],
-  "|file:///Users/potato/Developer/Projects/testproject/src/main.rs|(118,130,<9,0>,<16,1>)": []
+  "|file:///Users/potato/Developer/Projects/testproject/src/main.rs|(92,130,<8,0>,<15,1>)": []
 }

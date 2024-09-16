@@ -24,6 +24,10 @@ import util::Config;
 
 import util::Maybe;
 
+import util::Refactor;
+
+import lang::rust::\syntax::Ferrocene;
+
 // public void main(list[str] args){
 // 	str usage = "usage: SaferFFI.rsc [-v] [-c /\<path-from-root\>/\<callgraph\>] /\<path-from-root\>/\<target\>";
 //     str insufficient_parameters = "Error: No project root path provided. Please consult the usage guide.";
@@ -211,12 +215,13 @@ public void main(list[str] args) {
 
 
 
-public void parseCallGraph(loc callgraph){
+public Maybe[map[str, list[loc]]] parseCallGraph(loc callgraph){
 	try {
 		map[str, list[loc]] callGraph = readJSON(#map[str, list[loc]], callgraph);
-		println(callGraph);
+		return just(callGraph);
 	} catch ParseError(e): {
 		println("Error while parsing JSON");
+        return nothing();
 	}
 }
 
@@ -272,6 +277,8 @@ public void refactorWrap(list[Tree] source_trees, loc project_loc, loc callgraph
     	println("Running wrap refactoring...");
 	}
     int count = 0;
+    map[loc, FunctionDeclaration] wrapped_fns = ();
+    map[loc, Tree] wrapped_trees = ();
 	for(st <- source_trees){
 	
 		if(verbose){
@@ -279,20 +286,51 @@ public void refactorWrap(list[Tree] source_trees, loc project_loc, loc callgraph
 			print("\rProcessing file <count> out of <size(source_trees)>...");
 		}
 	
-		str project_path = project_loc.path;
+        str project_path = project_loc.path;
 		str file_path = st@\loc.path;
 		
 		str new_project_path = (project_loc.parent + (project_loc.file + "_idiom/")).path;
 		loc new_file_path = |file:///| + replaceFirst(file_path, project_path, new_project_path);
 		
-		Tree wrap = wrap2(st);
-        println(st.src);
 		
-		writeFile(new_file_path, wrap);
+
+		<tree, loc2fn> = wrap2(st);
+        wrapped_fns += loc2fn;
+        wrapped_trees += (new_file_path: tree);
+
+		
 	}
 	if(verbose){
 		print("\n");
 	}
+
+    Maybe[map[str, list[loc]]] maybeCallGraph = parseCallGraph(callgraph);
+
+    switch(maybeCallGraph){
+        case just(map[str, list[loc]] callGraph): {
+            for (file_path <- wrapped_trees){
+                Tree st = refactorCalls(wrapped_trees[file_path], callGraph, wrapped_fns);
+	            writeFile(file_path, st);
+            }
+        }
+        case nothing(): {
+            println("Aborting refactor because parsing callgraph failed.");
+        }
+    }
+
+    // for (st <- wrapped_trees){
+
+    //     othertest(st, parseCallGraph(callgraph), wrapped_fns);
+
+    //     // str project_path = project_loc.path;
+	// 	// str file_path = st@\loc.path;
+		
+	// 	// str new_project_path = (project_loc.parent + (project_loc.file + "_idiom/")).path;
+	// 	// loc new_file_path = |file:///| + replaceFirst(file_path, project_path, new_project_path);
+		
+		
+	// 	// writeFile(new_file_path, wrap);
+    // }
 
 }
 
@@ -362,6 +400,8 @@ public void refactorConfig(list[Tree] source_trees, loc project_loc, bool verbos
 	if(verbose){
 			print("\n");
 	}
+
+  
 
 }
 
