@@ -1964,7 +1964,8 @@ syntax OuterAttribute
     ;
 
 syntax AttributeContent
-    = SimplePath AttributeInput?
+    = //SimplePath AttributeInput?
+    ![\[\]]*
     ;
 
 syntax AttributeInput

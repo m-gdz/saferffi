@@ -37,7 +37,7 @@ tuple[start[SourceFile] file, map[loc, FunctionDeclaration] loc2fn] wrap2(start[
              newer_items := convert_items(repacked_fns)
     }
     return  <file, loc2fn>;
-}
+} 
 
 
 
@@ -47,19 +47,15 @@ list[FunctionDeclaration] extract_fns(ExternItem* fns){
     list[FunctionDeclaration] fnds = [];
     top-down visit(fns){
         case t: (FunctionDeclaration) `fn <Name name>();` :{
-            
             fnds += t;
         }
         case t: (FunctionDeclaration) `fn <Name name>(<FunctionParameterList fpl>);` :{
-            
             fnds += t;
         }
         case t: (FunctionDeclaration) `fn <Name name>()<ReturnType rt>;` :{
-            
             fnds += t;
         }
         case t: (FunctionDeclaration) `fn <Name name>(<FunctionParameterList fpl>)<ReturnType rt>;` :{
-            
             fnds += t;
         }
     }
