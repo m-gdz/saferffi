@@ -17,20 +17,20 @@ import ValueIO;
 import lang::rust::\syntax::Ferrocene;
 
 
-start[SourceFile] refactorCalls(start[SourceFile] sourceFile, map[str, list[loc]] callGraph, map[loc, FunctionDeclaration] wrappedFunctions) {
-    map[loc, loc] flattenedCallGraph = flattenCallGraph(callGraph);
+start[SourceFile] refactorCalls(start[SourceFile] sourceFile, map[str, list[loc]] refMap, map[loc, FunctionDeclaration] wrappedFunctions) {
+    map[loc, loc] flattenedRefMap = flattenRefMap(refMap);
 
     return top-down visit(sourceFile) {
         case t: (CallExpression) `<CallOperand operand>(<ArgumentOperandList args>)` : {
-            loc fnDeclaration = findCallInGraph(operand.src, flattenedCallGraph);
+            loc fnDeclaration = findCallInGraph(operand.src, flattenedRefMap);
             if (fnDeclaration != |unknown:///|) {
                 Maybe[FunctionDeclaration] maybeFn = getFunctionDeclaration(fnDeclaration, wrappedFunctions);
             
                 if (!(maybeFn is nothing)) {
 
-                    println("Found a call to a wrapped function: <unparse(maybeFn.val)>");
-                    println(args);
-                    ArgumentOperandList newArgs = updateArguments(args);
+                    // println("Found a call to a wrapped function: <unparse(maybeFn.val)>");
+                    // println(args);
+                    ArgumentOperandList newArgs = updateArguments(args, maybeFn.val);
                     CallOperand newOperand = renameCall(operand);
                     insert (CallExpression) `<CallOperand newOperand>(<ArgumentOperandList newArgs>)`;
                 }
@@ -63,15 +63,15 @@ Maybe[FunctionDeclaration] getFunctionDeclaration(loc location, map[loc, Functio
     return nothing();
 }
 
-map[loc, loc] flattenCallGraph(map[str, list[loc]] callGraph) {
+map[loc, loc] flattenRefMap(map[str, list[loc]] refMap) {
     map[loc, loc] flat = ();
-    for (entry <- callGraph) {
-        flat += (location : readTextValueString(#loc, entry) | location <- callGraph[entry]);
+    for (entry <- refMap) {
+        flat += (location : readTextValueString(#loc, entry) | location <- refMap[entry]);
     }
     return flat;
 }
 
-ArgumentOperandList updateArguments(ArgumentOperandList args) = top-down visit(args) {
+ArgumentOperandList updateArguments(ArgumentOperandList args, FunctionDeclaration fn_decl) = top-down visit(args) {
     case (Expression) `<ByteStringLiteral lit> as *const u8 as *const libc::c_char` : {
         Expression string = [Expression] "\"<literalToStr(lit)>\"";
         insert (Expression) `<Expression string>`;

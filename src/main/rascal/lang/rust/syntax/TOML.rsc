@@ -19,7 +19,10 @@ syntax Section = Table Keyval*;
 //     ;
 
 
-lexical NonAscii = [\u0080-\uD7FF] | [\uE000-\u10FFFF];
+lexical NonAscii = [\u0080-\uD7FF] | [\uE000-\uFFFF] | [\uD800-\uDBFF][\uDC00-\uDFFF];
+
+
+
 
 
 // Key-Value Pairs
@@ -49,7 +52,9 @@ lexical HEXDIG = [0-9a-fA-F];
 
 
 // Multiline Basic String
-syntax MLBasicString = "\"\"\"" MLBasicBody "\"\"\"";
+syntax MLBasicString = "\"\"\"" ![\"]* "\"\"\"";
+
+/*
 syntax MLBasicBody = MLBContent* (MLBQuotes MLBContent+) MLBQuotes? ;
 
 syntax MLBContent = MLBChar | MLBEscapedNL;
@@ -57,6 +62,7 @@ lexical MLBChar = MLBUnescaped | Escaped;
 lexical MLBQuotes =  "\"" | ("\"" "\"");
 lexical MLBUnescaped =  [\u0021\u0023-\u005B\u005D-\u007E] | NonAscii;
 lexical MLBEscapedNL = Escape;
+*/
 
 // Literal String
 lexical LiteralString = "\'" ([\u0009\u0020-\u0026\u0028-\u007E] | NonAscii)* "\'" ;

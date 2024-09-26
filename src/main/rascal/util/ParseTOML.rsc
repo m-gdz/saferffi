@@ -1,12 +1,11 @@
-@contributors{Adrian Zborowski - ak.zborowski@gmail.com}
 
-module util::Parse
+module util::ParseTOML
 
 import IO;
 import ParseTree;
 import Exception;
 
-import lang::rust::\syntax::Ferrocene;
+import lang::rust::\syntax::TOML;
 
 @doc{
 .Synopsis
@@ -29,7 +28,7 @@ public list[Tree] Parse(list[loc] source_locs, bool verbose=false){
 	for(source_loc <- source_locs){
 		try{
 			
-			Tree source_tree = parse(#start[SourceFile], source_loc, allowAmbiguity=true);
+			Tree source_tree = parse(#start[TOML], source_loc, allowAmbiguity=false);
 			
 			parsed += source_loc;
 			if(/t:amb(_) := source_tree){
