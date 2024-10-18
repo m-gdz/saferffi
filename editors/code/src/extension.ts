@@ -14,13 +14,13 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Use the console to output diagnostic information (console.log) and errors (console.error)
     // This line of code will only be executed once when your extension is activated
-    console.log('Congratulations, your extension "oxidize" is now active!');
+    console.log('Congratulations, your extension "saferffi" is now active!');
 
     // The command has been defined in the package.json file
     // Now provide the implementation of the command with registerCommand
     // The commandId parameter must match the command field in package.json
 
-    const disposable = vscode.commands.registerCommand('oxidize.launchRascal', () => {
+    const disposable = vscode.commands.registerCommand('saferffi.launchRascal', () => {
 
     
         var rascalExtension =  vscode.extensions.getExtension( 'usethesource.rascalmpl' );
@@ -61,7 +61,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposable);
 
 
-    const disposableWrap = vscode.commands.registerCommand('oxidize.refactor.wrap', async () => {
+    const disposableWrap = vscode.commands.registerCommand('saferffi.refactor.wrap', async () => {
         let referenceMap = await generateReferenceMapForWorkspace();
 
         let referenceMapPath = path.join(context.extensionPath, 'references.json');
@@ -96,13 +96,13 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(disposableWrap);
 
-    const disposableConfig = vscode.commands.registerCommand('oxidize.refactor.config', async () => {
+    const disposableConfig = vscode.commands.registerCommand('saferffi.refactor.config', async () => {
         await runRascalCommand(context, ['Oxidize.rsc', '-v', 'config']);
     });
 
     context.subscriptions.push(disposableConfig);
 
-    const disposableRemoveUnsafe = vscode.commands.registerCommand('oxidize.refactor.removeunsafe', async () => {
+    const disposableRemoveUnsafe = vscode.commands.registerCommand('saferffi.refactor.removeunsafe', async () => {
 
         let unnecessaryUnsafeBlocks = findUnnecessaryUnsafeBlocks();
         let unnecessaryUnsafeBlocksPath = path.join(context.extensionPath, 'unnecessaryUnsafeBlocks.json');

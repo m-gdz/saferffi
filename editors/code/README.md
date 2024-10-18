@@ -1,33 +1,33 @@
-# oxidize README
+# SaferFFI
 
-This is the README for the VS Code extension "saferffi".
+This is the README for the SaferFFI Visual Studio Code extension.
 
 ## Features
 
-- **Wrap Refactoring**: Automatically wraps functions with `safe_` prefixes and replaces relevant function calls using a callgraph.
-- **Remove Unsafe Blocks**: Identifies and removes unnecessary unsafe blocks based on a provided `unsafe.json`.
-- **Config Refactoring**: Perform general configuration refactoring.
-  
+- **Wrap Refactoring**: Automatically wraps functions with `_wrapped` suffixes and updates function calls using the project's callgraph.
+- **Remove Unsafe Blocks**: Detects and removes unnecessary `unsafe` blocks based on the provided `unsafe.json` file.
+- **Config Refactoring**: Performs general configuration-based refactoring for Rust projects.
 
 ## Requirements
 
-- Rust installed in your environment.
-- The `rascal-analyzer` extension and `java` installed on your machine.
+To use the SaferFFI extension, you will need:
 
-## Extension Settings
+- **Rust** installed in your environment.
+- **Java** (JDK >= 14) and **Java Runtime Environment (JRE) >= 14**.
+- The **Rust-Analyzer** extension (version >= 0.3.2112)
+- The **CodeLLDB** extension (version >= 1.10.0)
 
-This extension contributes the following settings:
+## Installation
 
-* `oxidize.verbose`: Enable/disable verbose logging for refactoring processes.
-  
-## Known Issues
+To install the SaferFFI extension:
 
-- Issues may arise if the `callgraph.json` or `unsafe.json` files are missing or incorrectly formatted.
-- Large Rust projects might experience delays during the wrapping process due to extensive callgraph analysis.
+1. Download the `.vsix` package from the release section of the repository.
+2. Open Visual Studio Code and navigate to the Extensions view.
+3. Click on the three dots in the top-right corner and select "Install from VSIX…".
+4. Select the downloaded `.vsix` package to complete the installation.
 
 ## Release Notes
 
 ### 0.0.1
 
-Initial release of Oxidize with support for `wrap`, `removeunsafe`, and `config` refactoring options.
-
+- Initial release of SaferFFI with support for `wrap`, `removeunsafe`, and `config` refactoring options.

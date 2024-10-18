@@ -1,6 +1,6 @@
 {
-  "name": "oxidize",
-  "displayName": "oxidize",
+  "name": "saferffi",
+  "displayName": "saferffi",
   "description": "",
   "version": "0.0.1",
   "engines": {
@@ -18,22 +18,22 @@
   "contributes": {
     "commands": [
       {
-        "command": "oxidize.refactor.wrap",
+        "command": "saferffi.refactor.wrap",
         "title": "Wrap Refactor",
         "category": "SaferFFI"
       },
       {
-        "command": "oxidize.refactor.config",
+        "command": "saferffi.refactor.config",
         "title": "Config Refactor",
         "category": "SaferFFI"
       },
       {
-        "command": "oxidize.refactor.removeunsafe",
+        "command": "saferffi.refactor.removeunsafe",
         "title": "Remove Unsafe Refactor",
         "category": "SaferFFI"
       },
       {
-        "command": "oxidize.launchRascal",
+        "command": "saferffi.launchRascal",
         "title": "Launch Rascal",
         "category": "SaferFFI"
       }
