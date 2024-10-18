@@ -33,8 +33,9 @@
         "category": "SaferFFI"
       },
       {
-        "command": "oxidize.getDiagnostics",
-        "title": "Oxidize: Get Diagnostics"
+        "command": "oxidize.launchRascal",
+        "title": "Launch Rascal",
+        "category": "SaferFFI"
       }
     ]
   },

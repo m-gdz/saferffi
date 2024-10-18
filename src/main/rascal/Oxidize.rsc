@@ -1,4 +1,4 @@
-module SaferFFI
+module Oxidize
 
 // Std
 import IO;
@@ -29,7 +29,7 @@ import util::Refactor;
 import lang::rust::\syntax::Ferrocene;
 
 // public void main(list[str] args){
-// 	str usage = "usage: SaferFFI.rsc [-v] [-c /\<path-from-root\>/\<callgraph\>] /\<path-from-root\>/\<target\>";
+// 	str usage = "usage: Oxidize.rsc [-v] [-c /\<path-from-root\>/\<callgraph\>] /\<path-from-root\>/\<target\>";
 //     str insufficient_parameters = "Error: No project root path provided. Please consult the usage guide.";
 // 	str insufficient_parameters_cg = "Error: No callgraph path provided. Please consult the usage guide.";
     
@@ -179,7 +179,7 @@ public void main(list[str] args) {
             // Execute removeunsafe logic here
             println("Removing unsafe code using: " + unsafe_json_path.path);
             println("On project: " + project_path.path);
-			SaferFFI(project_path, unsafe_json=unsafe_json_path, command="removeunsafe", verbose=verbose);
+			Oxidize(project_path, unsafe_json=unsafe_json_path, command="removeunsafe", verbose=verbose);
         }
         case /wrap/: {
             // Handle wrap command (requires callgraph.json and project path)
@@ -204,7 +204,7 @@ public void main(list[str] args) {
             // Execute wrap logic here
             println("Wrapping code using: " + callgraph_path.path);
             println("On project: " + project_path.path);
-			SaferFFI(project_path, callgraph=callgraph_path, command="wrap", verbose=verbose);
+			Oxidize(project_path, callgraph=callgraph_path, command="wrap", verbose=verbose);
         }
         default: {
             println(invalid_command);
@@ -238,7 +238,7 @@ public Maybe[list[loc]] parseUnnecessaryUnsafeBlocks(loc file) {
 
 
 
-public void SaferFFI(loc project_loc, str extension=".rs", loc callgraph = |unknown:///|, loc unsafe_json = |unknown:///|, str command="", bool verbose=false) {
+public void Oxidize(loc project_loc, str extension=".rs", loc callgraph = |unknown:///|, loc unsafe_json = |unknown:///|, str command="", bool verbose=false) {
     datetime timer_start = now();
     
     // Step 1: Walk the project directory

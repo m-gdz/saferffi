@@ -20,6 +20,46 @@ export function activate(context: vscode.ExtensionContext) {
     // Now provide the implementation of the command with registerCommand
     // The commandId parameter must match the command field in package.json
 
+    const disposable = vscode.commands.registerCommand('oxidize.launchRascal', () => {
+
+    
+        var rascalExtension =  vscode.extensions.getExtension( 'usethesource.rascalmpl' );
+
+        // is the ext loaded and ready?
+        if( rascalExtension && rascalExtension.isActive == false ){
+            rascalExtension.activate().then(
+                function(){
+                    console.log( "Extension activated");
+                    vscode.workspace.openTextDocument(vscode.Uri.file('/Users/potato/Developer/Projects/saferffi/editors/code/resources/main/rascal/Oxidize.rsc')).then((document) => {
+                        vscode.window.showTextDocument(document, { preview: false }).then(() => {
+                            vscode.commands.executeCommand("rascalmpl.importModule", "SaferFFI");
+                        });
+                    });
+
+                    //vscode.commands.executeCommand("rascalmpl.importModule", "'"+path.join(context.extensionPath, 'resources/src/main/rascal/Oxidize.rsc')+"'");
+                },
+                function(){
+                    console.log( "Extension activation failed");
+                }
+            );   
+        } else {
+            //vscode.commands.executeCommand("xmlTools.formatAsXml");
+        }
+
+
+        // vscode.commands.executeCommand("usethesource.rascalmpl.startTerminal", path.join(context.extensionPath, 'resources/src/main/rascal'), "--loadModule", "Oxidize.rsc")
+        // .then(
+        //     () => {
+        //         vscode.window.showInformationMessage(`Module imported successfully.`);
+        //     },
+        //     (err) => {
+        //         vscode.window.showErrorMessage(`Failed to import module: ${err}`);
+        //     }
+        // );
+    });
+
+    context.subscriptions.push(disposable);
+
 
     const disposableWrap = vscode.commands.registerCommand('oxidize.refactor.wrap', async () => {
         let referenceMap = await generateReferenceMapForWorkspace();
@@ -31,7 +71,7 @@ export function activate(context: vscode.ExtensionContext) {
 
             await saveReferenceMapToDisk(referenceMap, referenceMapPath);
             vscode.window.showInformationMessage("Reference map generated and saved successfully.");
-            await runRascalCommand(context, ['SaferFFI.rsc', '-v', 'wrap'], [referenceMapPath]);
+            await runRascalCommand(context, ['Oxidize.rsc', '-v', 'wrap'], [referenceMapPath]);
 
         } else {
             vscode.window.showErrorMessage("Failed to save reference map.");
@@ -48,7 +88,7 @@ export function activate(context: vscode.ExtensionContext) {
         //     vscode.window.showInformationMessage("Call hierarchy generated and saved successfully.");
 
         //     // Pass the generated callGraphPath as an additional argument to runRascalCommand
-        //     await runRascalCommand(context, ['SaferFFI.rsc', '-v', 'wrap'], [callGraphPath]);
+        //     await runRascalCommand(context, ['Oxidize.rsc', '-v', 'wrap'], [callGraphPath]);
         // } else {
         //     vscode.window.showErrorMessage('Failed to generate callgraph.');
         // }
@@ -57,7 +97,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposableWrap);
 
     const disposableConfig = vscode.commands.registerCommand('oxidize.refactor.config', async () => {
-        await runRascalCommand(context, ['SaferFFI.rsc', '-v', 'config']);
+        await runRascalCommand(context, ['Oxidize.rsc', '-v', 'config']);
     });
 
     context.subscriptions.push(disposableConfig);
@@ -69,10 +109,10 @@ export function activate(context: vscode.ExtensionContext) {
 
         if (unnecessaryUnsafeBlocks) {
             saveUnnecessaryUnsafeBlocksToDisk(unnecessaryUnsafeBlocks, unnecessaryUnsafeBlocksPath);
-            await runRascalCommand(context, ['SaferFFI.rsc', '-v', 'removeunsafe'], [unnecessaryUnsafeBlocksPath]);
+            await runRascalCommand(context, ['Oxidize.rsc', '-v', 'removeunsafe'], [unnecessaryUnsafeBlocksPath]);
         }
 
-        //await runRascalCommand(context, ['SaferFFI.rsc', '-v', 'removeunsafe']);
+        //await runRascalCommand(context, ['Oxidize.rsc', '-v', 'removeunsafe']);
     });
 
     context.subscriptions.push(disposableRemoveUnsafe);

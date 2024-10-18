@@ -1,6 +1,9 @@
 {
-  "|file:///Users/potato/Developer/Projects/testproject/src/main.rs|(0,46,<0,0>,<2,1>)": [
-    "|file:///Users/potato/Developer/Projects/testproject/src/main.rs|(64,6,<5,4>,<5,10>)"
+  "|file:///Users/potato/Developer/Projects/saferffi-demo/testproject/src/main.rs|(152,57,<2,4>,<2,61>)": [
+    "|file:///Users/potato/Developer/Projects/saferffi-demo/testproject/src/main.rs|(252,6,<5,4>,<5,10>)"
   ],
-  "|file:///Users/potato/Developer/Projects/testproject/src/main.rs|(48,27,<4,0>,<6,1>)": []
+  "|file:///Users/potato/Developer/Projects/saferffi-demo/testproject/src/main.rs|(212,136,<4,0>,<7,1>)": [
+    "|file:///Users/potato/Developer/Projects/saferffi-demo/testproject/src/main.rs|(399,6,<9,34>,<9,40>)"
+  ],
+  "|file:///Users/potato/Developer/Projects/saferffi-demo/testproject/src/main.rs|(349,70,<8,0>,<10,1>)": []
 }
